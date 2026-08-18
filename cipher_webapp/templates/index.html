@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Layer Cipher</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Index & Reverse Cipher</h1>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('encrypt')">Encrypt</button>
+            <button class="tab-button" onclick="switchTab('decrypt')">Decrypt</button>
+        </div>
+
+        <!-- ENCRYPT TAB -->
+        <div id="encrypt" class="tab-content active">
+            <div class="form-group">
+                <label for="plaintext">Plaintext</label>
+                <textarea id="plaintext" placeholder="Enter your message here..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="encrypt-key">Transposition Key (columns)</label>
+                    <input type="number" id="encrypt-key" placeholder="e.g., 3" min="1" value="3">
+                </div>
+                <div class="form-group">
+                    <label for="encrypt-user-key">Cipher Key (letters/numbers)</label>
+                    <input type="text" id="encrypt-user-key" placeholder="e.g., SECRET123">
+                </div>
+            </div>
+
+            <button onclick="encryptMessage()">Encrypt Message</button>
+
+            <div id="intermediate-result" class="result-box">
+                <h3>Step 1: First Encryption (Shifted)</h3>
+                <div class="result-text" id="intermediate-output"></div>
+                <button class="copy-btn" onclick="copyToClipboard('intermediate-output')">Copy to Clipboard</button>
+            </div>
+
+            <div id="encrypt-result" class="result-box">
+                <h3>Step 2: Final Encrypted Message (Reversed)</h3>
+                <div class="result-text" id="encrypted-output"></div>
+                <button class="copy-btn" onclick="copyToClipboard('encrypted-output')">Copy to Clipboard</button>
+            </div>
+
+            <div id="encrypt-loading" class="loading">Processing encryption...</div>
+            <div id="encrypt-error" class="result-box error" style="display: none;">
+                <h3>Error</h3>
+                <div id="encrypt-error-message"></div>
+            </div>
+        </div>
+
+        <!-- DECRYPT TAB -->
+        <div id="decrypt" class="tab-content">
+            <div class="form-group">
+                <label for="ciphertext">Ciphertext</label>
+                <textarea id="ciphertext" placeholder="Paste encrypted message here..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="decrypt-key">Transposition Key (columns)</label>
+                    <input type="number" id="decrypt-key" placeholder="e.g., 3" min="1" value="3">
+                </div>
+                <div class="form-group">
+                    <label for="decrypt-user-key">Cipher Key (letters/numbers)</label>
+                    <input type="text" id="decrypt-user-key" placeholder="e.g., SECRET123">
+                </div>
+            </div>
+
+            <button onclick="decryptMessage()">Decrypt Message</button>
+
+            <div id="decrypt-result" class="result-box">
+                <h3>Decrypted Message</h3>
+                <div class="result-text" id="decrypted-output"></div>
+                <button class="copy-btn" onclick="copyToClipboard('decrypted-output')">Copy to Clipboard</button>
+            </div>
+
+            <div id="decrypt-loading" class="loading">Processing decryption...</div>
+            <div id="decrypt-error" class="result-box error" style="display: none;">
+                <h3>Error</h3>
+                <div id="decrypt-error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
