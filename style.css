@@ -1,0 +1,15 @@
+body {
+  font-family: Arial, sans-serif;
+  background:#f4f4f4;
+  text-align: center;
+  margin-top:80px;
+}
+
+h1{
+  color:green
+  ;
+}
+
+p{
+  font-size:20px;
+}
