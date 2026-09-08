@@ -266,14 +266,27 @@ input:checked + .slider::before { transform: translateX(18px); }
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--gray-50);
     padding: 20px;
-    background-image: url('/ceit-complaint-system/assets/img/cvsu.jpg');
-    background-position: center;
-    background-size: cover;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
 }
+
+   .auth-wrap::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('/ceit-complaint-system/assets/img/cvsu.jpg');
+        background-position: center;
+        background-size: cover;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+        filter: blur(2px);
+        transform: scale(1.1); /* prevents blurred edges from showing */
+        z-index: -1;
+    }
 .auth-card { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px; width: 100%; max-width: 420px; }
 .auth-card h2 { text-align: center; margin: 0 0 20px; letter-spacing: 0.03em; font-size: 18px; }
 .role-toggle { display: flex; gap: 20px; margin-bottom: 18px; font-size: 13.5px; }
