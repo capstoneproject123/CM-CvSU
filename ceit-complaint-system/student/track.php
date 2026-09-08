@@ -67,7 +67,7 @@ require __DIR__ . '/../includes/sidebar.php';
     <?php if (!$cases): ?>
         <div class="empty-state">No cases match your filters.</div>
     <?php else: ?>
-    <table class="data-table">
+    <div class="table-scroll"><table class="data-table">
         <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Date</th><th>Type</th><th>Status</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($cases as $c): ?>
@@ -78,11 +78,11 @@ require __DIR__ . '/../includes/sidebar.php';
                 <td><?= date('M j, Y', strtotime($c['created_at'])) ?></td>
                 <td><span class="badge <?= $c['type'] === 'complaint' ? 'badge-complaint' : 'badge-inquiry' ?>"><?= ucfirst($c['type']) ?></span></td>
                 <td><span class="badge <?= status_badge_class($c['status']) ?>"><?= e($c['status']) ?></span></td>
-                <td><a class="link-btn" href="/ceit-complaint-system/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
+                <td><a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
-    </table>
+    </table></div>
     <?php endif; ?>
 </div>
 

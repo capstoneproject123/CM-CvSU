@@ -3,7 +3,7 @@ require __DIR__ . '/../config/db.php';
 require __DIR__ . '/../includes/functions.php';
 
 if (is_logged_in()) {
-    header('Location: ' . (current_role() === 'student' ? '/ceit-complaint-system/student/dashboard.php' : '/ceit-complaint-system/admin/dashboard.php'));
+    header('Location: ' . (current_role() === 'student' ? '' . BASE_URL . '/student/dashboard.php' : '' . BASE_URL . '/admin/dashboard.php'));
     exit;
 }
 
@@ -29,8 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['role']       = $user['role'];
 
         header('Location: ' . ($user['role'] === 'student'
-            ? '/ceit-complaint-system/student/dashboard.php'
-            : '/ceit-complaint-system/admin/dashboard.php'));
+            ? '' . BASE_URL . '/student/dashboard.php'
+            : '' . BASE_URL . '/admin/dashboard.php'));
         exit;
     }
 }
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Log In · CEIT CvSU</title>
-<link rel="stylesheet" href="/ceit-complaint-system/assets/css/style.css?v=<?= @filemtime(__DIR__ . '/../assets/css/style.css') ?: time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= @filemtime(__DIR__ . '/../assets/css/style.css') ?: time() ?>">
 </head>
 <body>
 <div class="auth-wrap">
@@ -64,9 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <button type="submit" class="btn btn-primary btn-block">LOG IN</button>
         </form>
-        <div class="auth-footer">Don't have an account? <a href="/ceit-complaint-system/auth/register.php">Create One Here</a></div>
+        <div class="auth-footer">Don't have an account? <a href="<?= BASE_URL ?>/auth/register.php">Create One Here</a></div>
     </div>
 </div>
-<script src="/ceit-complaint-system/assets/js/script.js?v=<?= @filemtime(__DIR__ . '/../assets/js/script.js') ?: time() ?>"></script>
+<script>window.APP_BASE = "<?= BASE_URL ?>";</script>
+<script src="<?= BASE_URL ?>/assets/js/script.js?v=<?= @filemtime(__DIR__ . '/../assets/js/script.js') ?: time() ?>"></script>
 </body>
 </html>

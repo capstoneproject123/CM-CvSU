@@ -61,12 +61,12 @@ require __DIR__ . '/../includes/sidebar.php';
 <div class="panel">
     <div class="panel-head">
         <h2>Recent Cases</h2>
-        <a href="/ceit-complaint-system/admin/cases.php" class="link-btn">View All →</a>
+        <a href="<?= BASE_URL ?>/admin/cases.php" class="link-btn">View All →</a>
     </div>
     <?php if (!$recent): ?>
         <div class="empty-state"><?= $role === 'adviser' ? 'No cases have been assigned to you yet.' : 'No cases have been submitted yet.' ?></div>
     <?php else: ?>
-    <table class="data-table">
+    <div class="table-scroll"><table class="data-table">
         <thead><tr><th>ID</th><th>Name</th><th>Title</th><th>Category</th><th>Priority</th><th>Status</th><th>Date</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($recent as $c): ?>
@@ -78,11 +78,11 @@ require __DIR__ . '/../includes/sidebar.php';
                 <td><span class="badge <?= priority_badge_class($c['priority']) ?>"><?= e($c['priority']) ?></span></td>
                 <td><span class="badge <?= status_badge_class($c['status']) ?>"><?= e($c['status']) ?></span></td>
                 <td><?= date('M j, Y', strtotime($c['created_at'])) ?></td>
-                <td><a class="link-btn" href="/ceit-complaint-system/admin/case.php?id=<?= $c['case_id'] ?>">View Details</a></td>
+                <td><a class="link-btn" href="<?= BASE_URL ?>/admin/case.php?id=<?= $c['case_id'] ?>">View Details</a></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
-    </table>
+    </table></div>
     <?php endif; ?>
 </div>
 
