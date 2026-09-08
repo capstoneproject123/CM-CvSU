@@ -87,6 +87,31 @@ a { text-decoration: none; color: inherit; }
     display: block; padding: 12px 16px; font-size: 13px; line-height: 1.4;
     border-bottom: 1px solid var(--gray-100); color: var(--text); position: relative;
 }
+
+.notif-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    line-height: 1;
+    color: #36454F;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+    .notif-delete:hover {
+        color: #333;
+        background: rgba(0, 0, 0, 0.06);
+    }
+
+    .notif-delete:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+
 .notif-item:hover { background: var(--gray-50); }
 .notif-item.unread { background: var(--green-light); }
 .notif-item.unread::before {
