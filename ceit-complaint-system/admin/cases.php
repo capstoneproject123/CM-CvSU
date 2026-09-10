@@ -3,14 +3,14 @@ require __DIR__ . '/../config/db.php';
 require __DIR__ . '/../includes/functions.php';
 require_role(['admin', 'sysadmin', 'adviser']);
 
-$myId = $_SESSION['user_id'];
-$role = current_role();
+$myId  = $_SESSION['user_id'];
+$role  = current_role();
 
 $category = $_GET['category'] ?? '';
-$status = $_GET['status'] ?? '';
+$status   = $_GET['status'] ?? '';
 $dateFrom = $_GET['date_from'] ?? '';
-$dateTo = $_GET['date_to'] ?? '';
-$search = trim($_GET['q'] ?? '');
+$dateTo   = $_GET['date_to'] ?? '';
+$search   = trim($_GET['q'] ?? '');
 
 $sql = "SELECT c.*, u.first_name, u.last_name,
                a.first_name AS assignee_first, a.last_name AS assignee_last
@@ -58,12 +58,9 @@ $matchedFields = [];
 if ($search !== '') {
     foreach ($cases as $c) {
         $fullName = trim($c['first_name'] . ' ' . $c['last_name']);
-        if (stripos($c['case_code'], $search) !== false)
-            $matchedFields['id'] = true;
-        if (!$c['is_anonymous'] && stripos($fullName, $search) !== false)
-            $matchedFields['name'] = true;
-        if (stripos($c['title'], $search) !== false)
-            $matchedFields['title'] = true;
+        if (stripos($c['case_code'], $search) !== false) $matchedFields['id'] = true;
+        if (!$c['is_anonymous'] && stripos($fullName, $search) !== false) $matchedFields['name'] = true;
+        if (stripos($c['title'], $search) !== false) $matchedFields['title'] = true;
     }
 }
 $matchedFields = array_keys($matchedFields);
@@ -71,22 +68,21 @@ $matchedFields = array_keys($matchedFields);
 $categories = ['Academic Concerns', 'Technical Issues', 'Administrative', 'Facilities & Equipment', 'Others'];
 
 // Shared renderer for the two badge-style columns (priority, status).
-function badge_cell($value, callable $classFn)
-{
+function badge_cell($value, callable $classFn) {
     return '<span class="badge ' . $classFn($value) . '">' . e($value) . '</span>';
 }
 
 // --- Column definitions: label + how to render each cell -----------------
 // This list also defines the DEFAULT column order.
 $columnDefs = [
-    'id' => ['label' => 'ID', 'cell' => fn($c) => e($c['case_code'])],
-    'name' => ['label' => 'Name', 'cell' => fn($c) => $c['is_anonymous'] ? 'Anonymous' : e($c['first_name'] . ' ' . $c['last_name'])],
-    'title' => ['label' => 'Title', 'cell' => fn($c) => e($c['title'])],
+    'id'       => ['label' => 'ID', 'cell' => fn($c) => e($c['case_code'])],
+    'name'     => ['label' => 'Name', 'cell' => fn($c) => $c['is_anonymous'] ? 'Anonymous' : e($c['first_name'] . ' ' . $c['last_name'])],
+    'title'    => ['label' => 'Title', 'cell' => fn($c) => e($c['title'])],
     'category' => ['label' => 'Category', 'cell' => fn($c) => e($c['category'])],
     'priority' => ['label' => 'Priority', 'cell' => fn($c) => badge_cell($c['priority'], 'priority_badge_class')],
-    'status' => ['label' => 'Status', 'cell' => fn($c) => badge_cell($c['status'], 'status_badge_class')],
+    'status'   => ['label' => 'Status', 'cell' => fn($c) => badge_cell($c['status'], 'status_badge_class')],
     'assigned' => ['label' => 'Assigned To', 'cell' => fn($c) => $c['assignee_first'] ? e($c['assignee_first'] . ' ' . $c['assignee_last']) : '<span class="text-muted">Unassigned</span>'],
-    'date' => ['label' => 'Date', 'cell' => fn($c) => date('M j, Y', strtotime($c['created_at']))],
+    'date'     => ['label' => 'Date', 'cell' => fn($c) => date('M j, Y', strtotime($c['created_at']))],
 ];
 $defaultOrder = array_keys($columnDefs);
 
@@ -152,29 +148,13 @@ require __DIR__ . '/../includes/sidebar.php';
     </form>
 
     <?php if ($search !== ''): ?>
-        <p class="text-muted" style="margin: 0 0 8px;">
-            Showing results for "<?= e($search) ?>"
-        </p>
+        <p class="text-muted" style="margin: 0 0 8px;">Showing results for "<?= e($search) ?>"</p>
     <?php endif; ?>
 
     <?php if (!$cases): ?>
         <div class="empty-state">No cases match your filters.</div>
     <?php else: ?>
     <div class="table-scroll"><table class="data-table">
-        <thead><tr><th>ID</th><th>Name</th><th>Title</th><th>Category</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th><th></th></tr></thead>
-        <tbody>
-        <?php foreach ($cases as $c): ?>
-            <tr>
-                <td><?= e($c['case_code']) ?></td>
-                <td><?= $c['is_anonymous'] ? 'Anonymous' : e($c['first_name'] . ' ' . $c['last_name']) ?></td>
-                <td><?= e($c['title']) ?></td>
-                <td><?= e($c['category']) ?></td>
-                <td><span class="badge <?= priority_badge_class($c['priority']) ?>"><?= e($c['priority']) ?></span></td>
-                <td><span class="badge <?= status_badge_class($c['status']) ?>"><?= e($c['status']) ?></span></td>
-                <td><?= $c['assignee_first'] ? e($c['assignee_first'] . ' ' . $c['assignee_last']) : '<span class="text-muted">Unassigned</span>' ?></td>
-                <td><?= date('M j, Y', strtotime($c['created_at'])) ?></td>
-                <td><a class="link-btn" href="<?= BASE_URL ?>/admin/case.php?id=<?= $c['case_id'] ?>">View Details</a></td>
-    <table class="data-table">
         <thead>
         <tr>
             <?php foreach ($orderedKeys as $key): ?>
@@ -190,19 +170,13 @@ require __DIR__ . '/../includes/sidebar.php';
                 <?php foreach ($orderedKeys as $key): ?>
                     <td><?= $columnDefs[$key]['cell']($c) ?></td>
                 <?php endforeach; ?>
-                <td><a class="link-btn" href="/ceit-complaint-system/admin/case.php?id=<?= $c['case_id'] ?>">View Details</a></td>
+                <td><a class="link-btn" href="<?= BASE_URL ?>/admin/case.php?id=<?= $c['case_id'] ?>">View Details</a></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
     </table></div>
     <?php endif; ?>
 </div>
-
-<style>
-th.th-pinned {
-    background: #eaf3ff;
-}
-</style>
 
 <script>
 function setPin(key) {

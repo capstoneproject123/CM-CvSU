@@ -45,10 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <div class="auth-wrap">
-    <div class="auth-header">
-    <img src="/ceit-complaint-system/assets/img/ceit-cvsu-logo.png" alt="CEIT CvSU Complaint and Inquiry" class="auth-logo">
-</div>
-    
     <div class="auth-card">
         <h2>LOG IN</h2>
         <?php render_flash(); ?>
@@ -71,9 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="auth-footer">Don't have an account? <a href="<?= BASE_URL ?>/auth/register.php">Create One Here</a></div>
     </div>
 </div>
+<footer class="auth-copyright">&copy; <?= date('Y') ?> Copyright Cavite State University - Indang</footer>
 <script>window.APP_BASE = "<?= BASE_URL ?>";</script>
 <script src="<?= BASE_URL ?>/assets/js/script.js?v=<?= @filemtime(__DIR__ . '/../assets/js/script.js') ?: time() ?>"></script>
-    <footer class="auth-copyright">&copy; 2026 Copyright Cavite State University - Indang</footer>
-<script src="/ceit-complaint-system/assets/js/script.js?v=<?= @filemtime(__DIR__ . '/../assets/js/script.js') ?: time() ?>"></script>
 </body>
 </html>

@@ -6,10 +6,10 @@ require_role(['student']);
 $userId = $_SESSION['user_id'];
 
 $statusFilter = $_GET['status'] ?? '';
-$typeFilter = $_GET['type'] ?? '';
-$dateFrom = $_GET['date_from'] ?? '';
-$dateTo = $_GET['date_to'] ?? '';
-$search = trim($_GET['q'] ?? '');
+$typeFilter   = $_GET['type'] ?? '';
+$dateFrom     = $_GET['date_from'] ?? '';
+$dateTo       = $_GET['date_to'] ?? '';
+$search       = trim($_GET['q'] ?? '');
 
 $sql = "SELECT * FROM cases WHERE user_id = ?";
 $params = [$userId];
@@ -45,30 +45,27 @@ $cases = $stmt->fetchAll();
 $matchedFields = [];
 if ($search !== '') {
     foreach ($cases as $c) {
-        if (stripos($c['case_code'], $search) !== false)
-            $matchedFields['id'] = true;
-        if (stripos($c['title'], $search) !== false)
-            $matchedFields['title'] = true;
+        if (stripos($c['case_code'], $search) !== false) $matchedFields['id'] = true;
+        if (stripos($c['title'], $search) !== false) $matchedFields['title'] = true;
     }
 }
 $matchedFields = array_keys($matchedFields);
 
 // Shared renderer for the badge-style columns (type, status).
 // $label lets a column show something other than the raw value (e.g. "Complaint" instead of "complaint").
-function badge_cell($value, callable $classFn, $label = null)
-{
+function badge_cell($value, callable $classFn, $label = null) {
     return '<span class="badge ' . $classFn($value) . '">' . ($label ?? e($value)) . '</span>';
 }
 
 // --- Column definitions: label + how to render each cell -----------------
 // This list also defines the DEFAULT column order.
 $columnDefs = [
-    'id' => ['label' => 'ID', 'cell' => fn($c) => e($c['case_code'])],
-    'title' => ['label' => 'Title', 'cell' => fn($c) => e($c['title'])],
+    'id'       => ['label' => 'ID', 'cell' => fn($c) => e($c['case_code'])],
+    'title'    => ['label' => 'Title', 'cell' => fn($c) => e($c['title'])],
     'category' => ['label' => 'Category', 'cell' => fn($c) => e($c['category'])],
-    'date' => ['label' => 'Date', 'cell' => fn($c) => date('M j, Y', strtotime($c['created_at']))],
-    'type' => ['label' => 'Type', 'cell' => fn($c) => badge_cell($c['type'], fn($v) => $v === 'complaint' ? 'badge-complaint' : 'badge-inquiry', ucfirst($c['type']))],
-    'status' => ['label' => 'Status', 'cell' => fn($c) => badge_cell($c['status'], 'status_badge_class')],
+    'date'     => ['label' => 'Date', 'cell' => fn($c) => date('M j, Y', strtotime($c['created_at']))],
+    'type'     => ['label' => 'Type', 'cell' => fn($c) => badge_cell($c['type'], fn($v) => $v === 'complaint' ? 'badge-complaint' : 'badge-inquiry', ucfirst($c['type']))],
+    'status'   => ['label' => 'Status', 'cell' => fn($c) => badge_cell($c['status'], 'status_badge_class')],
 ];
 $defaultOrder = array_keys($columnDefs);
 
@@ -127,25 +124,17 @@ require __DIR__ . '/../includes/sidebar.php';
             <?php endforeach; ?>
         </select>
         <button type="submit" class="btn btn-outline btn-sm">Filter</button>
-        <a href="/ceit-complaint-system/student/track.php" class="btn btn-outline btn-sm">Reset Filter</a>
+        <a href="<?= BASE_URL ?>/student/track.php" class="btn btn-outline btn-sm">Reset Filter</a>
     </form>
+
+    <?php if ($search !== ''): ?>
+        <p class="text-muted" style="margin: 0 0 8px;">Showing results for "<?= e($search) ?>"</p>
+    <?php endif; ?>
 
     <?php if (!$cases): ?>
         <div class="empty-state">No cases match your filters.</div>
     <?php else: ?>
     <div class="table-scroll"><table class="data-table">
-        <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Date</th><th>Type</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-        <?php foreach ($cases as $c): ?>
-            <tr>
-                <td><?= e($c['case_code']) ?></td>
-                <td><?= e($c['title']) ?></td>
-                <td><?= e($c['category']) ?></td>
-                <td><?= date('M j, Y', strtotime($c['created_at'])) ?></td>
-                <td><span class="badge <?= $c['type'] === 'complaint' ? 'badge-complaint' : 'badge-inquiry' ?>"><?= ucfirst($c['type']) ?></span></td>
-                <td><span class="badge <?= status_badge_class($c['status']) ?>"><?= e($c['status']) ?></span></td>
-                <td><a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
-    <table class="data-table">
         <thead>
         <tr>
             <?php foreach ($orderedKeys as $key): ?>
@@ -161,19 +150,13 @@ require __DIR__ . '/../includes/sidebar.php';
                 <?php foreach ($orderedKeys as $key): ?>
                     <td><?= $columnDefs[$key]['cell']($c) ?></td>
                 <?php endforeach; ?>
-                <td><a class="link-btn" href="/ceit-complaint-system/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
+                <td><a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
     </table></div>
     <?php endif; ?>
 </div>
-
-<style>
-th.th-pinned {
-    background: #eaf3ff;
-}
-</style>
 
 <script>
 function setPin(key) {
