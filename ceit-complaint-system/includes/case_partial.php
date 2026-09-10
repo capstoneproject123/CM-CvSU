@@ -37,7 +37,7 @@ $roleLabels = ['student' => 'Student', 'admin' => 'Admin', 'sysadmin' => 'System
             <?php if (!empty($attachments)): ?>
                 <div style="margin-top:10px;">
                     <?php foreach ($attachments as $a): ?>
-                        <a class="link-btn" style="display:block;" href="/ceit-complaint-system/<?= e($a['file_path']) ?>" target="_blank">📎 <?= e($a['file_name']) ?></a>
+                        <a class="link-btn" style="display:block;" href="<?= BASE_URL ?>/<?= e($a['file_path']) ?>" target="_blank">📎 <?= e($a['file_name']) ?></a>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
