@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         flash_set('success', 'Account created successfully. Please log in.');
-        header('Location: /ceit-complaint-system/auth/login.php');
+        header('Location: ' . BASE_URL . '/auth/login.php');
         exit;
     }
 }
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Create Account · CEIT CvSU</title>
-<link rel="stylesheet" href="/ceit-complaint-system/assets/css/style.css?v=<?= @filemtime(__DIR__ . '/../assets/css/style.css') ?: time() ?>">
+<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= @filemtime(__DIR__ . '/../assets/css/style.css') ?: time() ?>">
 </head>
 <body>
 <div class="auth-wrap">
@@ -167,9 +167,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <button type="submit" class="btn btn-primary btn-block">REGISTER</button>
         </form>
-        <div class="auth-footer">Already have an account? <a href="/ceit-complaint-system/auth/login.php">Log In Here</a></div>
+        <div class="auth-footer">Already have an account? <a href="<?= BASE_URL ?>/auth/login.php">Log In Here</a></div>
     </div>
 </div>
+<script>window.APP_BASE = "<?= BASE_URL ?>";</script>
+<script src="<?= BASE_URL ?>/assets/js/script.js?v=<?= @filemtime(__DIR__ . '/../assets/js/script.js') ?: time() ?>"></script>
      <footer class="auth-copyright">&copy; 2026 Copyright Cavite State University - Indang</footer>
 <script src="/ceit-complaint-system/assets/js/script.js?v=<?= @filemtime(__DIR__ . '/../assets/js/script.js') ?: time() ?>"></script>
 </body>

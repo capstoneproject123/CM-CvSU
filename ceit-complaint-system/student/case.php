@@ -12,7 +12,7 @@ $case = $stmt->fetch();
 
 if (!$case) {
     flash_set('error', 'Case not found.');
-    header('Location: /ceit-complaint-system/student/track.php');
+    header('Location: ' . BASE_URL . '/student/track.php');
     exit;
 }
 
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'send_
             ->execute([$caseId, $userId, $msg]);
         notify_new_message($pdo, $caseId, $userId);
     }
-    header('Location: /ceit-complaint-system/student/case.php?id=' . $caseId);
+    header('Location: ' . BASE_URL . '/student/case.php?id=' . $caseId);
     exit;
 }
 
@@ -46,7 +46,7 @@ require __DIR__ . '/../includes/sidebar.php';
 ?>
 <div class="page-header">
     <h1>Case Progress</h1>
-    <p><a class="link-btn" href="/ceit-complaint-system/student/track.php">← Back to Track</a></p>
+    <p><a class="link-btn" href="<?= BASE_URL ?>/student/track.php">← Back to Track</a></p>
 </div>
 <?php render_flash(); ?>
 <?php require __DIR__ . '/../includes/case_partial.php'; ?>

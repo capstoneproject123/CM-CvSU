@@ -21,6 +21,9 @@ if ($action === 'list') {
                             ORDER BY created_at DESC LIMIT 20");
     $stmt->execute([$userId]);
     $rows = $stmt->fetchAll();
+
+    $caseBase = current_role() === 'student' ? '' . BASE_URL . '/student/case.php' : '' . BASE_URL . '/admin/case.php';
+
     $caseBase = current_role() === 'student' ? '/ceit-complaint-system/student/case.php' : '/ceit-complaint-system/admin/case.php';
     $out = array_map(function ($r) use ($caseBase) {
         return [

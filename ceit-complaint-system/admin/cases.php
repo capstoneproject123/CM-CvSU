@@ -148,7 +148,7 @@ require __DIR__ . '/../includes/sidebar.php';
             <?php endforeach; ?>
         </select>
         <button type="submit" class="btn btn-outline btn-sm">Filter</button>
-        <a href="/ceit-complaint-system/admin/cases.php" class="btn btn-outline btn-sm">Reset Filter</a>
+        <a href="<?= BASE_URL ?>/admin/cases.php" class="btn btn-outline btn-sm">Reset Filter</a>
     </form>
 
     <?php if ($search !== ''): ?>
@@ -160,6 +160,20 @@ require __DIR__ . '/../includes/sidebar.php';
     <?php if (!$cases): ?>
         <div class="empty-state">No cases match your filters.</div>
     <?php else: ?>
+    <div class="table-scroll"><table class="data-table">
+        <thead><tr><th>ID</th><th>Name</th><th>Title</th><th>Category</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+        <?php foreach ($cases as $c): ?>
+            <tr>
+                <td><?= e($c['case_code']) ?></td>
+                <td><?= $c['is_anonymous'] ? 'Anonymous' : e($c['first_name'] . ' ' . $c['last_name']) ?></td>
+                <td><?= e($c['title']) ?></td>
+                <td><?= e($c['category']) ?></td>
+                <td><span class="badge <?= priority_badge_class($c['priority']) ?>"><?= e($c['priority']) ?></span></td>
+                <td><span class="badge <?= status_badge_class($c['status']) ?>"><?= e($c['status']) ?></span></td>
+                <td><?= $c['assignee_first'] ? e($c['assignee_first'] . ' ' . $c['assignee_last']) : '<span class="text-muted">Unassigned</span>' ?></td>
+                <td><?= date('M j, Y', strtotime($c['created_at'])) ?></td>
+                <td><a class="link-btn" href="<?= BASE_URL ?>/admin/case.php?id=<?= $c['case_id'] ?>">View Details</a></td>
     <table class="data-table">
         <thead>
         <tr>
@@ -180,7 +194,7 @@ require __DIR__ . '/../includes/sidebar.php';
             </tr>
         <?php endforeach; ?>
         </tbody>
-    </table>
+    </table></div>
     <?php endif; ?>
 </div>
 

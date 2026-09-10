@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ---------- Notification bell + profile dropdown ----------
-    var API = '/ceit-complaint-system/notifications_api.php';
+    var API = (window.APP_BASE || '') + '/notifications_api.php';
 
     function setupDropdown(btnId, panelId) {
         var btn = document.getElementById(btnId);
@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var notif = setupDropdown('notif-btn', 'notif-panel');
     setupDropdown('profile-btn', 'profile-panel');
+    setupDropdown('menu-btn', 'menu-panel');
 
     if (notif) {
         var badge = document.getElementById('notif-badge');

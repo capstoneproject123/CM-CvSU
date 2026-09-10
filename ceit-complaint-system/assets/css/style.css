@@ -1,3 +1,6 @@
+/* ==========================================================
+   CEIT CvSU Complaint & Inquiry Management System
+   ========================================================== */
 
 :root {
     --green: #1a7a43;
@@ -43,6 +46,13 @@ a { text-decoration: none; color: inherit; }
     top: 0;
     z-index: 20;
 }
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+#menu-wrap { display: none; }
+.menu-btn {
+    background: none; border: none; cursor: pointer; color: inherit;
+    font-size: 20px; line-height: 1; padding: 4px 6px; border-radius: 6px;
+}
+.menu-btn:hover { background: rgba(255,255,255,0.15); }
 .topbar-brand { display: flex; align-items: center; gap: 10px; }
 .brand-logo { width: 34px; height: 34px; object-fit: contain; border-radius: 6px; background: #fff; padding: 2px; }
 .brand-logo-fallback {
@@ -79,6 +89,7 @@ a { text-decoration: none; color: inherit; }
     width: 300px; max-width: 90vw; z-index: 50; overflow: hidden;
 }
 .dropdown-panel-right { right: -4px; width: 220px; }
+.dropdown-panel-left { left: -4px; right: auto; width: 210px; padding: 8px; }
 .dropdown-title { padding: 12px 16px; font-weight: 700; font-size: 13px; border-bottom: 1px solid var(--gray-100); }
 .dropdown-link { display: block; padding: 11px 16px; font-size: 13.5px; color: var(--text); }
 .dropdown-link:hover { background: var(--gray-50); }
@@ -131,6 +142,7 @@ a { text-decoration: none; color: inherit; }
     padding: 16px 10px;
     flex-shrink: 0;
 }
+
 .nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 14px; margin-bottom: 4px;
@@ -140,9 +152,9 @@ a { text-decoration: none; color: inherit; }
 .nav-item:hover { background: var(--gray-100); }
 .nav-item.active { background: var(--green); color: #fff; }
 .nav-icon { font-size: 15px; }
-.nav-logout { margin-top: 20px; border-top: 1px solid var(--gray-200); padding-top: 14px; color: var(--red); }
+.nav-logout { margin-top: 6px; border-top: 1px solid var(--gray-200); padding-top: 12px; color: var(--red); }
 
-.main-content { flex: 1; padding: 24px 28px; min-width: 0; }
+.main-content { padding: 24px 28px; min-width: 0; }
 
 .page-header { margin-bottom: 20px; }
 .page-header h1 { margin: 0 0 4px; font-size: 22px; }
@@ -173,7 +185,8 @@ a { text-decoration: none; color: inherit; }
 .panel-head h2 { font-size: 16px; margin: 0; }
 
 /* ---------- Tables ---------- */
-table.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; }
+table.data-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13.5px; }
 .data-table th {
     text-align: left; color: var(--gray-600); font-weight: 600;
     font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.03em;
@@ -246,7 +259,7 @@ input:checked + .slider { background: var(--green); }
 input:checked + .slider::before { transform: translateX(18px); }
 
 /* Profile picture uploader (Settings pages) */
-.profile-pic-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.profile-pic-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
 .profile-pic-preview {
     width: 64px; height: 64px; border-radius: 50%; overflow: hidden;
     background: var(--green-light); color: var(--green-dark);
@@ -261,6 +274,7 @@ input:checked + .slider::before { transform: translateX(18px); }
 .tab-btn.active { background: #fff; color: var(--text); box-shadow: var(--shadow); }
 
 /* ---------- Auth pages ---------- */
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--gray-50); padding: 20px; }
 .auth-wrap {
     min-height: 100vh;
     display: flex;
@@ -375,11 +389,59 @@ input:checked + .slider::before { transform: translateX(18px); }
 .checkbox-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--gray-600); }
 .checkbox-row input { margin-top: 3px; }
 
-@media (max-width: 800px) {
+@media (max-width: 640px) {
     .app-shell { flex-direction: column; }
-    .sidebar { width: 100%; display: flex; overflow-x: auto; }
-    .nav-item { flex-shrink: 0; }
-    .nav-logout { margin-top: 0; border-top: none; }
+    .sidebar { display: none; }
+    #menu-wrap { display: block; }
     .form-row { grid-template-columns: 1fr; }
     .dropdown-panel { width: 260px; right: -10px; }
+    .main-content { padding: 16px; }
+    .chat-box { height: 320px; }
+    .msg { max-width: 85%; }
+}
+
+@media (max-width: 480px) {
+    .topbar { padding: 10px 14px; }
+    .brand-sub { display: none; }
+    .brand-title { font-size: 14px; }
+    .brand-logo, .brand-logo-fallback { width: 28px; height: 28px; }
+    .topbar-actions { gap: 10px; }
+    .main-content { padding: 12px; }
+    .page-header { margin-bottom: 14px; }
+    .page-header h1 { font-size: 19px; }
+    .page-header p { font-size: 12.5px; }
+    .panel, .auth-card { padding: 14px; margin-bottom: 14px; }
+
+    /* Force a true single-column "portrait" stack for stat cards */
+    .stat-grid { grid-template-columns: 1fr; gap: 10px; }
+    .stat-card { padding: 12px; }
+    .stat-card .stat-value { font-size: 21px; }
+    .stat-icon { font-size: 18px; }
+
+    .filter-row { gap: 8px; }
+    .filter-row select, .filter-row input[type=date] { flex: 1 1 45%; min-width: 0; }
+    .search-input { flex-basis: 100%; }
+
+    .dropdown-panel { width: 220px; right: -60px; }
+    .dropdown-panel::before { content: none; }
+
+    .case-meta { flex-direction: column; }
+    .case-meta form { width: 100%; }
+    .case-meta .badge { margin-bottom: 4px; display: inline-block; }
+
+    .stepper .label { font-size: 9.5px; }
+    .stepper .dot { width: 22px; height: 22px; font-size: 11px; }
+
+    .chat-input input { min-width: 0; }
+
+    /* Registration role toggle + profile picture row feel cramped at full gap */
+    .role-toggle { gap: 12px; }
+    .profile-pic-row { gap: 12px; }
+    .profile-pic-preview { width: 56px; height: 56px; font-size: 18px; }
+
+    /* Slightly denser table text so more columns are readable before scrolling */
+    .data-table { font-size: 12.5px; }
+    .data-table th, .data-table td { padding: 9px 10px; }
+
+    .btn { padding: 10px 16px; font-size: 13.5px; }
 }
