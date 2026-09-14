@@ -4,9 +4,9 @@ require __DIR__ . '/includes/functions.php';
 
 if (is_logged_in()) {
     header('Location: ' . (current_role() === 'student'
-        ? '/ceit-complaint-system/student/dashboard.php'
-        : '/ceit-complaint-system/admin/dashboard.php'));
+        ? '' . BASE_URL . '/student/dashboard.php'
+        : '' . BASE_URL . '/admin/dashboard.php'));
 } else {
-    header('Location: /ceit-complaint-system/auth/login.php');
+    header('Location: ' . BASE_URL . '/auth/login.php');
 }
 exit;

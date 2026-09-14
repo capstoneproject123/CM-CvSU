@@ -14,7 +14,7 @@ function current_role(): ?string {
 
 function require_login(): void {
     if (!is_logged_in()) {
-        header('Location: /ceit-complaint-system/auth/login.php');
+        header('Location: ' . BASE_URL . '/auth/login.php');
         exit;
     }
 }
@@ -22,7 +22,7 @@ function require_login(): void {
 function require_role(array $roles): void {
     require_login();
     if (!in_array(current_role(), $roles, true)) {
-        header('Location: /ceit-complaint-system/auth/login.php');
+        header('Location: ' . BASE_URL . '/auth/login.php');
         exit;
     }
 }

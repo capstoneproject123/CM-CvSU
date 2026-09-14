@@ -49,12 +49,12 @@ require __DIR__ . '/../includes/sidebar.php';
 <div class="panel">
     <div class="panel-head">
         <h2>Your Complaints</h2>
-        <a href="/ceit-complaint-system/student/track.php" class="link-btn">View All →</a>
+        <a href="<?= BASE_URL ?>/student/track.php" class="link-btn">View All →</a>
     </div>
     <?php if (!$cases): ?>
-        <div class="empty-state">You haven't submitted any complaints or inquiries yet.<br><a href="/ceit-complaint-system/student/submit.php" class="link-btn">Submit one now →</a></div>
+        <div class="empty-state">You haven't submitted any complaints or inquiries yet.<br><a href="<?= BASE_URL ?>/student/submit.php" class="link-btn">Submit one now →</a></div>
     <?php else: ?>
-    <table class="data-table">
+    <div class="table-scroll"><table class="data-table">
         <thead><tr><th>ID</th><th>Title</th><th>Date</th><th>Type</th><th>Status</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($cases as $c): ?>
@@ -64,11 +64,11 @@ require __DIR__ . '/../includes/sidebar.php';
                 <td><?= date('M j, Y', strtotime($c['created_at'])) ?></td>
                 <td><span class="badge <?= $c['type'] === 'complaint' ? 'badge-complaint' : 'badge-inquiry' ?>"><?= ucfirst($c['type']) ?></span></td>
                 <td><span class="badge <?= status_badge_class($c['status']) ?>"><?= e($c['status']) ?></span></td>
-                <td><a class="link-btn" href="/ceit-complaint-system/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
+                <td><a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
-    </table>
+    </table></div>
     <?php endif; ?>
 </div>
 

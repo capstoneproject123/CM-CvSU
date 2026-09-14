@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['first_name'] = $firstName;
             $_SESSION['last_name'] = $lastName;
             flash_set('success', 'Profile updated.');
-            header('Location: /ceit-complaint-system/admin/settings.php');
+            header('Location: ' . BASE_URL . '/admin/settings.php');
             exit;
         }
     }
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("UPDATE users SET password_hash = ? WHERE user_id = ?")
                 ->execute([password_hash($new, PASSWORD_BCRYPT), $userId]);
             flash_set('success', 'Password changed successfully.');
-            header('Location: /ceit-complaint-system/admin/settings.php');
+            header('Location: ' . BASE_URL . '/admin/settings.php');
             exit;
         }
     }
@@ -71,7 +71,7 @@ require __DIR__ . '/../includes/sidebar.php';
         <div class="profile-pic-row">
             <div class="profile-pic-preview">
                 <?php if ($user['avatar_path']): ?>
-                    <img src="/ceit-complaint-system/<?= e($user['avatar_path']) ?>" alt="">
+                    <img src="<?= BASE_URL ?>/<?= e($user['avatar_path']) ?>" alt="">
                 <?php else: ?>
                     <span><?= e(strtoupper(substr($user['first_name'], 0, 1) . substr($user['last_name'], 0, 1))) ?></span>
                 <?php endif; ?>

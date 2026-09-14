@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("INSERT INTO users (first_name, last_name, employee_id, password_hash, role) VALUES (?, ?, ?, ?, ?)")
                 ->execute([$firstName, $lastName, $employeeId, password_hash($tempPass, PASSWORD_BCRYPT), $role]);
             flash_set('success', ucfirst($role) . " account for {$firstName} {$lastName} created.");
-            header('Location: /ceit-complaint-system/admin/team.php');
+            header('Location: ' . BASE_URL . '/admin/team.php');
             exit;
         }
     }
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("UPDATE users SET status = IF(status = 'active', 'disabled', 'active') WHERE user_id = ?")
                 ->execute([$targetId]);
         }
-        header('Location: /ceit-complaint-system/admin/team.php');
+        header('Location: ' . BASE_URL . '/admin/team.php');
         exit;
     }
 }
@@ -59,7 +59,7 @@ require __DIR__ . '/../includes/sidebar.php';
 
 <div class="panel">
     <div class="panel-head"><h2>Staff &amp; Adviser Accounts</h2></div>
-    <table class="data-table">
+    <div class="table-scroll"><table class="data-table">
         <thead><tr><th>Name</th><th>Employee ID</th><th>Role</th><th>Status</th><th>Joined</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($staff as $s): ?>
@@ -84,7 +84,7 @@ require __DIR__ . '/../includes/sidebar.php';
             </tr>
         <?php endforeach; ?>
         </tbody>
-    </table>
+    </table></div>
 </div>
 
 <div class="panel">
@@ -112,7 +112,7 @@ require __DIR__ . '/../includes/sidebar.php';
 
 <div class="panel">
     <div class="panel-head"><h2>Registered Students (<?= count($students) ?>)</h2></div>
-    <table class="data-table">
+    <div class="table-scroll"><table class="data-table">
         <thead><tr><th>Name</th><th>CvSU Email</th><th>Department</th><th>Year Level</th><th>Status</th><th>Joined</th></tr></thead>
         <tbody>
         <?php foreach (array_slice($students, 0, 25) as $s): ?>
@@ -126,7 +126,7 @@ require __DIR__ . '/../includes/sidebar.php';
             </tr>
         <?php endforeach; ?>
         </tbody>
-    </table>
+    </table></div>
     <?php if (!$students): ?><div class="empty-state">No students registered yet.</div><?php endif; ?>
 </div>
 

@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ---------- Notification bell + profile dropdown ----------
-    var API = '/ceit-complaint-system/notifications_api.php';
+    var API = (window.APP_BASE || '') + '/notifications_api.php';
 
     function setupDropdown(btnId, panelId) {
         var btn = document.getElementById(btnId);
@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var notif = setupDropdown('notif-btn', 'notif-panel');
     setupDropdown('profile-btn', 'profile-panel');
+    setupDropdown('menu-btn', 'menu-panel');
 
     if (notif) {
         var badge = document.getElementById('notif-badge');
@@ -144,18 +145,75 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        function emptyState() {
+            return '<div class="empty-state" style="padding:20px;">No notifications yet.</div>';
+        }
+
         function renderNotifications(items) {
             if (!items.length) {
-                list.innerHTML = '<div class="empty-state" style="padding:20px;">No notifications yet.</div>';
+                list.innerHTML = emptyState();
                 return;
             }
             list.innerHTML = items.map(function (n) {
                 var cls = 'notif-item' + (n.isRead ? '' : ' unread');
-                var inner = n.message.replace(/</g, '&lt;') + '<span class="notif-time">' + n.timeAgo + '</span>';
-                return n.link
-                    ? '<a class="' + cls + '" href="' + n.link + '">' + inner + '</a>'
-                    : '<div class="' + cls + '">' + inner + '</div>';
+                var inner = n.message.replace(/</g, '&lt;') + '<span class="notif-time">' + n.timeAgo + '</span>'
+                    + '<button type="button" class="notif-delete" data-id="' + n.id + '" aria-label="Delete notification" title="Delete">&times;</button>';
+                // Use a <div> wrapper (not <a>) whenever there's a delete button, so the
+                // click-to-navigate and click-to-delete targets don't get tangled up;
+                // clicking the message text itself still navigates via a nested link.
+                if (n.link) {
+                    inner = '<a class="notif-link" href="' + n.link + '">' + n.message.replace(/</g, '&lt;') + '</a>'
+                        + '<span class="notif-time">' + n.timeAgo + '</span>'
+                        + '<button type="button" class="notif-delete" data-id="' + n.id + '" aria-label="Delete notification" title="Delete">&times;</button>';
+                }
+                return '<div class="' + cls + '" data-id="' + n.id + '">' + inner + '</div>';
             }).join('');
         }
+
+        // Delegated handler: delete/dismiss a single notification.
+        list.addEventListener('click', function (e) {
+            var delBtn = e.target.closest('.notif-delete');
+            if (!delBtn) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            var item = delBtn.closest('.notif-item');
+            var id = delBtn.getAttribute('data-id');
+            if (!item || !id) return;
+
+            var wasUnread = item.classList.contains('unread');
+            delBtn.disabled = true;
+
+            fetch(API, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'action=delete&id=' + encodeURIComponent(id)
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res && res.success === false) {
+                        delBtn.disabled = false;
+                        return;
+                    }
+                    item.remove();
+                    if (!list.children.length) {
+                        list.innerHTML = emptyState();
+                    }
+                    // Keep the badge count honest if a still-unread item was removed.
+                    if (wasUnread && badge && badge.textContent) {
+                        var remaining = Math.max(0, (parseInt(badge.textContent, 10) || 0) - 1);
+                        if (remaining === 0) {
+                            badge.style.display = 'none';
+                            badge.textContent = '';
+                        } else {
+                            badge.textContent = String(remaining);
+                        }
+                    }
+                })
+                .catch(function () {
+                    delBtn.disabled = false;
+                });
+        });
     }
 });
