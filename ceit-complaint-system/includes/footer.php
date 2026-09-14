@@ -8,11 +8,11 @@
         </div>
         <div class="footer-col">
             <div class="footer-heading">Vision</div>
-            <p class="footer-text">To be the leading university in Cavite, known worldwide for shaping well-rounded graduates through strong academics, research, innovation, and community involvement.</p>
+            <p class="footer-text">The premier university in historic Cavite globally recognized for excellence in character development, academics, research, innovation and sustainable community engagement.</p>
         </div>
         <div class="footer-col">
             <div class="footer-heading">Mission</div>
-            <p class="footer-text">CvSU is committed to delivering quality, accessible, and meaningful education in the arts, sciences, and technology, backed by relevant research and development, to form capable, ethical graduates ready to compete globally.</p>
+            <p class="footer-text">Cavite State University shall provide excellent, equitable and relevant educational opportunities in the arts, sciences and technology through quality instruction and responsive research and development activities. It shall produce professional, skilled and morally upright individuals for global competitiveness.</p>
         </div>
         <div class="footer-col">
             <div class="footer-heading">Core Values</div>
@@ -29,3 +29,4 @@
 <script src="/ceit-complaint-system/assets/js/script.js?v=<?= @filemtime(__DIR__ . '/../assets/js/script.js') ?: time() ?>"></script>
 </body>
 </html>
+
