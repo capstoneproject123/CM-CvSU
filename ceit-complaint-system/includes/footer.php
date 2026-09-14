@@ -24,9 +24,8 @@
         <a href="https://cvsu.edu.ph/mission-vision-objectives/" target="_blank" rel="noopener">Mission, Vision, Objectives – Full Statement ↗</a>
     </div>
 </footer>
-</antartifact>
-</script>
-<script src="/ceit-complaint-system/assets/js/script.js?v=<?= @filemtime(__DIR__ . '/../assets/js/script.js') ?: time() ?>"></script>
+<script>window.APP_BASE = "<?= BASE_URL ?>";</script>
+<script src="<?= BASE_URL ?>/assets/js/script.js?v=<?= @filemtime(__DIR__ . '/../assets/js/script.js') ?: time() ?>"></script>
 </body>
 </html>
 

@@ -9,6 +9,7 @@ $statusFilter = $_GET['status'] ?? '';
 $typeFilter   = $_GET['type'] ?? '';
 $dateFrom     = $_GET['date_from'] ?? '';
 $dateTo       = $_GET['date_to'] ?? '';
+$datePreset   = $_GET['date_preset'] ?? ''; // '', 'month', 'year', or 'custom' — purely for restoring the dropdown UI
 $search       = trim($_GET['q'] ?? '');
 
 $sql = "SELECT * FROM cases WHERE user_id = ?";
@@ -99,18 +100,19 @@ require __DIR__ . '/../includes/sidebar.php';
 <div class="panel">
     <form method="get" class="filter-row" id="case-filter-form">
         <input type="hidden" name="pin" id="pin-field" value="<?= e($pin) ?>">
+        <input type="hidden" name="date_preset" id="date-preset-field" value="<?= e($datePreset) ?>">
 
         <input type="text" name="q" class="search-input" placeholder="Search by ID or title..." value="<?= e($search) ?>" oninput="setPin('search')">
         <select id="date-preset" onchange="applyDatePreset(this.value)">
-            <option value="">Date: Any time</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-            <option value="custom">Custom Range…</option>
+            <option value="" <?= $datePreset === '' ? 'selected' : '' ?>>Date: Any time</option>
+            <option value="month" <?= $datePreset === 'month' ? 'selected' : '' ?>>This Month</option>
+            <option value="year" <?= $datePreset === 'year' ? 'selected' : '' ?>>This Year</option>
+            <option value="custom" <?= $datePreset === 'custom' ? 'selected' : '' ?>>Custom Range…</option>
         </select>
-        <span id="custom-range-fields" style="display:none;">
-            <input type="date" name="date_from" value="<?= e($dateFrom) ?>" onchange="setPin('date'); this.form.submit()">
+        <span id="custom-range-fields" style="<?= $datePreset === '' ? 'display:none;' : '' ?>">
+            <input type="date" name="date_from" value="<?= e($dateFrom) ?>" onchange="setPin('date'); markCustom(); this.form.submit()">
             <span class="text-muted">to</span>
-            <input type="date" name="date_to" value="<?= e($dateTo) ?>" onchange="setPin('date'); this.form.submit()">
+            <input type="date" name="date_to" value="<?= e($dateTo) ?>" onchange="setPin('date'); markCustom(); this.form.submit()">
         </span>
         <select name="type" onchange="setPin('type'); this.form.submit()">
             <option value="">All Types</option>
@@ -164,13 +166,32 @@ function setPin(key) {
     if (f) f.value = key;
 }
 
+// Formats a Date using its LOCAL calendar day — never use toISOString() for
+// this, since that converts to UTC first and silently shifts the date by a
+// day in any timezone ahead of UTC (e.g. Philippines, UTC+8).
+function toLocalDateStr(d) {
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+}
+
+function markCustom() {
+    var f = document.getElementById('date-preset-field');
+    if (f) f.value = 'custom';
+    var sel = document.getElementById('date-preset');
+    if (sel) sel.value = 'custom';
+}
+
 function applyDatePreset(preset) {
     var form = document.getElementById('case-filter-form');
     var customFields = document.getElementById('custom-range-fields');
     var fromInput = form.querySelector('[name=date_from]');
     var toInput = form.querySelector('[name=date_to]');
+    var presetField = document.getElementById('date-preset-field');
 
     customFields.style.display = (preset === '') ? 'none' : '';
+    if (presetField) presetField.value = preset;
     if (preset === 'custom') return;
 
     var today = new Date();
@@ -179,19 +200,11 @@ function applyDatePreset(preset) {
         year: [new Date(today.getFullYear(), 0, 1), new Date(today.getFullYear(), 11, 31)],
     };
     var range = ranges[preset] || [null, null];
-    fromInput.value = range[0] ? range[0].toISOString().slice(0, 10) : '';
-    toInput.value = range[1] ? range[1].toISOString().slice(0, 10) : '';
+    fromInput.value = range[0] ? toLocalDateStr(range[0]) : '';
+    toInput.value = range[1] ? toLocalDateStr(range[1]) : '';
     setPin(preset ? 'date' : '');
     form.submit();
 }
-
-(function () {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('date_from') || params.get('date_to')) {
-        document.getElementById('date-preset').value = 'custom';
-        document.getElementById('custom-range-fields').style.display = '';
-    }
-})();
 </script>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

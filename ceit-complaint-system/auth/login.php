@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="auth-wrap">
      <div class="auth-header">
-        <img src="/ceit-complaint-system/assets/img/ceit-cvsu-logo.png" alt="CEIT CvSU Complaint and Inquiry" class="auth-logo">
+        <img src="<?= BASE_URL ?>/assets/img/ceit-cvsu-logo.png" alt="CEIT CvSU Complaint and Inquiry" class="auth-logo">
     </div>
     <div class="auth-card">
         <h2>LOG IN</h2>
