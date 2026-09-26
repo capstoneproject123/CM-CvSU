@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->commit();
             notify_admins_new_case($pdo, $caseId, $caseCode, $title, $type, $suggestedAdviserId);
             flash_set('success', "Your {$type} \"{$caseCode}\" was submitted successfully.");
-            header('Location: /ceit-complaint-system/student/case.php?id=' . $caseId);
+            header('Location: ' . BASE_URL . '/student/case.php?id=' . $caseId);
             exit;
         } catch (Exception $e) {
             $pdo->rollBack();

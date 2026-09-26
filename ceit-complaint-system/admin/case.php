@@ -18,14 +18,14 @@ $case = $stmt->fetch();
 
 if (!$case) {
     flash_set('error', 'Case not found.');
-    header('Location: /ceit-complaint-system/admin/cases.php');
+    header('Location: ' . BASE_URL . '/admin/cases.php');
     exit;
 }
 
 // Advisers never see cases that aren't assigned to them, full stop.
 if ($role === 'adviser' && (int) $case['assigned_to'] !== $myId) {
     flash_set('error', 'That case is not assigned to you.');
-    header('Location: /ceit-complaint-system/admin/cases.php');
+    header('Location: ' . BASE_URL . '/admin/cases.php');
     exit;
 }
 
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash_set('success', 'Case assigned to you. You can now message the student.');
     }
 
-    header('Location: /ceit-complaint-system/admin/case.php?id=' . $caseId);
+    header('Location: ' . BASE_URL . '/admin/case.php?id=' . $caseId);
     exit;
 }
 
@@ -92,7 +92,7 @@ require __DIR__ . '/../includes/sidebar.php';
 ?>
 <div class="page-header">
     <h1>Case Progress</h1>
-    <p><a class="link-btn" href="/ceit-complaint-system/admin/cases.php">← Back to Case List</a></p>
+    <p><a class="link-btn" href="<?= BASE_URL ?>/admin/cases.php">← Back to Case List</a></p>
 </div>
 <?php render_flash(); ?>
 

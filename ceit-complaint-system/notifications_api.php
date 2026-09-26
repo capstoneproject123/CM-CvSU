@@ -3,6 +3,7 @@
  * Lightweight JSON endpoint for the notification bell.
  *   GET  ?action=list        -> latest notifications for the logged-in user
  *   POST action=mark_read    -> marks all of the user's notifications as read
+ *   POST action=delete       -> permanently deletes one notification (id) for the user
  */
 require __DIR__ . '/config/db.php';
 require __DIR__ . '/includes/functions.php';
@@ -26,7 +27,7 @@ if ($action === 'list') {
     $stmt->execute([$userId]);
     $rows = $stmt->fetchAll();
 
-    $caseBase = current_role() === 'student' ? '/ceit-complaint-system/student/case.php' : '/ceit-complaint-system/admin/case.php';
+    $caseBase = current_role() === 'student' ? '' . BASE_URL . '/student/case.php' : '' . BASE_URL . '/admin/case.php';
 
     $out = array_map(function ($r) use ($caseBase) {
         return [
@@ -46,6 +47,20 @@ if ($action === 'mark_read' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0")
         ->execute([$userId]);
     echo json_encode(['success' => true]);
+    exit;
+}
+
+if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $notifId = $_POST['id'] ?? null;
+    if (!$notifId) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Missing id']);
+        exit;
+    }
+    // Scoped to user_id so a user can only ever delete their own notifications.
+    $stmt = $pdo->prepare("DELETE FROM notifications WHERE notification_id = ? AND user_id = ?");
+    $stmt->execute([$notifId, $userId]);
+    echo json_encode(['success' => $stmt->rowCount() > 0]);
     exit;
 }
 

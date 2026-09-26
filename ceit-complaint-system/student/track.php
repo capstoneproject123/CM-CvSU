@@ -9,21 +9,82 @@ $statusFilter = $_GET['status'] ?? '';
 $typeFilter   = $_GET['type'] ?? '';
 $dateFrom     = $_GET['date_from'] ?? '';
 $dateTo       = $_GET['date_to'] ?? '';
+$datePreset   = $_GET['date_preset'] ?? ''; // '', 'month', 'year', or 'custom' — purely for restoring the dropdown UI
 $search       = trim($_GET['q'] ?? '');
 
 $sql = "SELECT * FROM cases WHERE user_id = ?";
 $params = [$userId];
 
-if ($statusFilter !== '') { $sql .= " AND status = ?"; $params[] = $statusFilter; }
-if ($typeFilter !== '')   { $sql .= " AND type = ?"; $params[] = $typeFilter; }
-if ($dateFrom !== '')     { $sql .= " AND DATE(created_at) >= ?"; $params[] = $dateFrom; }
-if ($dateTo !== '')       { $sql .= " AND DATE(created_at) <= ?"; $params[] = $dateTo; }
-if ($search !== '')       { $sql .= " AND (title LIKE ? OR case_code LIKE ?)"; $params[] = "%$search%"; $params[] = "%$search%"; }
+// Simple equality/range filters, applied in one pass instead of one if-block each.
+$filters = [
+    'status = ?' => $statusFilter,
+    'type = ?' => $typeFilter,
+    'DATE(created_at) >= ?' => $dateFrom,
+    'DATE(created_at) <= ?' => $dateTo,
+];
+foreach ($filters as $clause => $value) {
+    if ($value !== '') {
+        $sql .= " AND $clause";
+        $params[] = $value;
+    }
+}
+
+if ($search !== '') {
+    $sql .= " AND (title LIKE ? OR case_code LIKE ?)";
+    $like = "%$search%";
+    $params[] = $like;
+    $params[] = $like;
+}
 
 $sql .= " ORDER BY created_at DESC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $cases = $stmt->fetchAll();
+
+// Which of ID / Title actually contain the search term, across the returned
+// rows — so a search only pins the column(s) it really matched.
+$matchedFields = [];
+if ($search !== '') {
+    foreach ($cases as $c) {
+        if (stripos($c['case_code'], $search) !== false) $matchedFields['id'] = true;
+        if (stripos($c['title'], $search) !== false) $matchedFields['title'] = true;
+    }
+}
+$matchedFields = array_keys($matchedFields);
+
+// Shared renderer for the badge-style columns (type, status).
+// $label lets a column show something other than the raw value (e.g. "Complaint" instead of "complaint").
+function badge_cell($value, callable $classFn, $label = null) {
+    return '<span class="badge ' . $classFn($value) . '">' . ($label ?? e($value)) . '</span>';
+}
+
+// --- Column definitions: label + how to render each cell -----------------
+// This list also defines the DEFAULT column order.
+$columnDefs = [
+    'id'       => ['label' => 'ID', 'cell' => fn($c) => e($c['case_code'])],
+    'title'    => ['label' => 'Title', 'cell' => fn($c) => e($c['title'])],
+    'category' => ['label' => 'Category', 'cell' => fn($c) => e($c['category'])],
+    'date'     => ['label' => 'Date', 'cell' => fn($c) => date('M j, Y', strtotime($c['created_at']))],
+    'type'     => ['label' => 'Type', 'cell' => fn($c) => badge_cell($c['type'], fn($v) => $v === 'complaint' ? 'badge-complaint' : 'badge-inquiry', ucfirst($c['type']))],
+    'status'   => ['label' => 'Status', 'cell' => fn($c) => badge_cell($c['status'], 'status_badge_class')],
+];
+$defaultOrder = array_keys($columnDefs);
+
+// --- Work out which column(s) should be pinned to the front --------------
+// 'search' pins only the column(s) that actually matched the search term
+// (falls back to both if, for some reason, neither was detected).
+$pin = $_GET['pin'] ?? '';
+if ($pin === 'search') {
+    $front = !empty($matchedFields)
+        ? array_values(array_intersect(['id', 'title'], $matchedFields))
+        : ['id', 'title'];
+} elseif (in_array($pin, $defaultOrder, true)) {
+    $front = [$pin];
+} else {
+    $pin = '';
+    $front = [];
+}
+$orderedKeys = array_merge($front, array_values(array_diff($defaultOrder, $front)));
 
 $pageTitle = 'Track · CEIT CvSU';
 $activeNav = 'track';
@@ -38,91 +99,112 @@ require __DIR__ . '/../includes/sidebar.php';
 
 <div class="panel">
     <form method="get" class="filter-row" id="case-filter-form">
-        <input type="text" name="q" class="search-input" placeholder="Search by ID or title..." value="<?= e($search) ?>">
+        <input type="hidden" name="pin" id="pin-field" value="<?= e($pin) ?>">
+        <input type="hidden" name="date_preset" id="date-preset-field" value="<?= e($datePreset) ?>">
+
+        <input type="text" name="q" class="search-input" placeholder="Search by ID or title..." value="<?= e($search) ?>" oninput="setPin('search')">
         <select id="date-preset" onchange="applyDatePreset(this.value)">
-            <option value="">Date: Any time</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-            <option value="custom">Custom Range…</option>
+            <option value="" <?= $datePreset === '' ? 'selected' : '' ?>>Date: Any time</option>
+            <option value="month" <?= $datePreset === 'month' ? 'selected' : '' ?>>This Month</option>
+            <option value="year" <?= $datePreset === 'year' ? 'selected' : '' ?>>This Year</option>
+            <option value="custom" <?= $datePreset === 'custom' ? 'selected' : '' ?>>Custom Range…</option>
         </select>
-        <span id="custom-range-fields" style="display:none;">
-            <input type="date" name="date_from" value="<?= e($dateFrom) ?>" onchange="this.form.submit()">
+        <span id="custom-range-fields" style="<?= $datePreset === '' ? 'display:none;' : '' ?>">
+            <input type="date" name="date_from" value="<?= e($dateFrom) ?>" onchange="setPin('date'); markCustom(); this.form.submit()">
             <span class="text-muted">to</span>
-            <input type="date" name="date_to" value="<?= e($dateTo) ?>" onchange="this.form.submit()">
+            <input type="date" name="date_to" value="<?= e($dateTo) ?>" onchange="setPin('date'); markCustom(); this.form.submit()">
         </span>
-        <select name="type" onchange="this.form.submit()">
+        <select name="type" onchange="setPin('type'); this.form.submit()">
             <option value="">All Types</option>
             <option value="complaint" <?= $typeFilter === 'complaint' ? 'selected' : '' ?>>Complaint</option>
             <option value="inquiry" <?= $typeFilter === 'inquiry' ? 'selected' : '' ?>>Inquiry</option>
         </select>
-        <select name="status" onchange="this.form.submit()">
+        <select name="status" onchange="setPin('status'); this.form.submit()">
             <option value="">All Status</option>
             <?php foreach (['Submitted', 'Under Review', 'In Progress', 'Resolved'] as $s): ?>
                 <option value="<?= $s ?>" <?= $statusFilter === $s ? 'selected' : '' ?>><?= $s ?></option>
             <?php endforeach; ?>
         </select>
         <button type="submit" class="btn btn-outline btn-sm">Filter</button>
+        <a href="<?= BASE_URL ?>/student/track.php" class="btn btn-outline btn-sm">Reset Filter</a>
     </form>
+
+    <?php if ($search !== ''): ?>
+        <p class="text-muted" style="margin: 0 0 8px;">Showing results for "<?= e($search) ?>"</p>
+    <?php endif; ?>
 
     <?php if (!$cases): ?>
         <div class="empty-state">No cases match your filters.</div>
     <?php else: ?>
-    <table class="data-table">
-        <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Date</th><th>Type</th><th>Status</th><th></th></tr></thead>
+    <div class="table-scroll"><table class="data-table">
+        <thead>
+        <tr>
+            <?php foreach ($orderedKeys as $key): ?>
+                <?php $isPinned = ($pin === $key) || ($pin === 'search' && in_array($key, $front, true)); ?>
+                <th class="<?= $isPinned ? 'th-pinned' : '' ?>"><?= e($columnDefs[$key]['label']) ?></th>
+            <?php endforeach; ?>
+            <th></th>
+        </tr>
+        </thead>
         <tbody>
         <?php foreach ($cases as $c): ?>
             <tr>
-                <td><?= e($c['case_code']) ?></td>
-                <td><?= e($c['title']) ?></td>
-                <td><?= e($c['category']) ?></td>
-                <td><?= date('M j, Y', strtotime($c['created_at'])) ?></td>
-                <td><span class="badge <?= $c['type'] === 'complaint' ? 'badge-complaint' : 'badge-inquiry' ?>"><?= ucfirst($c['type']) ?></span></td>
-                <td><span class="badge <?= status_badge_class($c['status']) ?>"><?= e($c['status']) ?></span></td>
-                <td><a class="link-btn" href="/ceit-complaint-system/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
+                <?php foreach ($orderedKeys as $key): ?>
+                    <td><?= $columnDefs[$key]['cell']($c) ?></td>
+                <?php endforeach; ?>
+                <td><a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
             </tr>
         <?php endforeach; ?>
         </tbody>
-    </table>
+    </table></div>
     <?php endif; ?>
 </div>
 
 <script>
+function setPin(key) {
+    var f = document.getElementById('pin-field');
+    if (f) f.value = key;
+}
+
+// Formats a Date using its LOCAL calendar day — never use toISOString() for
+// this, since that converts to UTC first and silently shifts the date by a
+// day in any timezone ahead of UTC (e.g. Philippines, UTC+8).
+function toLocalDateStr(d) {
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+}
+
+function markCustom() {
+    var f = document.getElementById('date-preset-field');
+    if (f) f.value = 'custom';
+    var sel = document.getElementById('date-preset');
+    if (sel) sel.value = 'custom';
+}
+
 function applyDatePreset(preset) {
     var form = document.getElementById('case-filter-form');
     var customFields = document.getElementById('custom-range-fields');
     var fromInput = form.querySelector('[name=date_from]');
     var toInput = form.querySelector('[name=date_to]');
-    var today = new Date();
+    var presetField = document.getElementById('date-preset-field');
 
-    if (preset === 'custom') {
-        customFields.style.display = '';
-        return;
-    }
     customFields.style.display = (preset === '') ? 'none' : '';
+    if (presetField) presetField.value = preset;
+    if (preset === 'custom') return;
 
-    if (preset === 'month') {
-        var first = new Date(today.getFullYear(), today.getMonth(), 1);
-        var last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        fromInput.value = first.toISOString().slice(0, 10);
-        toInput.value = last.toISOString().slice(0, 10);
-        form.submit();
-    } else if (preset === 'year') {
-        fromInput.value = today.getFullYear() + '-01-01';
-        toInput.value = today.getFullYear() + '-12-31';
-        form.submit();
-    } else if (preset === '') {
-        fromInput.value = '';
-        toInput.value = '';
-        form.submit();
-    }
+    var today = new Date();
+    var ranges = {
+        month: [new Date(today.getFullYear(), today.getMonth(), 1), new Date(today.getFullYear(), today.getMonth() + 1, 0)],
+        year: [new Date(today.getFullYear(), 0, 1), new Date(today.getFullYear(), 11, 31)],
+    };
+    var range = ranges[preset] || [null, null];
+    fromInput.value = range[0] ? toLocalDateStr(range[0]) : '';
+    toInput.value = range[1] ? toLocalDateStr(range[1]) : '';
+    setPin(preset ? 'date' : '');
+    form.submit();
 }
-(function () {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('date_from') || params.get('date_to')) {
-        document.getElementById('date-preset').value = 'custom';
-        document.getElementById('custom-range-fields').style.display = '';
-    }
-})();
 </script>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>
