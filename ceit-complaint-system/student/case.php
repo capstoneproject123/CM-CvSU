@@ -46,7 +46,9 @@ require __DIR__ . '/../includes/sidebar.php';
 ?>
 <div class="page-header">
     <h1>Case Progress</h1>
-    <p><a class="link-btn" href="<?= BASE_URL ?>/student/track.php">← Back to Track</a></p>
+    <p>
+        <a class="link-btn" href="<?= BASE_URL ?>/student/track.php">← Back to Track</a>
+    </p>
 </div>
 <?php render_flash(); ?>
 <?php require __DIR__ . '/../includes/case_partial.php'; ?>

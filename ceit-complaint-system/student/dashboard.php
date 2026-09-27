@@ -8,7 +8,9 @@ $userId = $_SESSION['user_id'];
 $stmt = $pdo->prepare("SELECT status, COUNT(*) c FROM cases WHERE user_id = ? GROUP BY status");
 $stmt->execute([$userId]);
 $counts = ['Submitted' => 0, 'Under Review' => 0, 'In Progress' => 0, 'Resolved' => 0];
-foreach ($stmt->fetchAll() as $row) { $counts[$row['status']] = (int) $row['c']; }
+foreach ($stmt->fetchAll() as $row) {
+    $counts[$row['status']] = (int) $row['c'];
+}
 $total = array_sum($counts);
 $pending = $counts['Submitted'] + $counts['Under Review'];
 
@@ -64,7 +66,9 @@ require __DIR__ . '/../includes/sidebar.php';
                 <td><?= date('M j, Y', strtotime($c['created_at'])) ?></td>
                 <td><span class="badge <?= $c['type'] === 'complaint' ? 'badge-complaint' : 'badge-inquiry' ?>"><?= ucfirst($c['type']) ?></span></td>
                 <td><span class="badge <?= status_badge_class($c['status']) ?>"><?= e($c['status']) ?></span></td>
-                <td><a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
+                <td style="white-space:nowrap;">
+                    <a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a>
+                </td>
             </tr>
         <?php endforeach; ?>
         </tbody>

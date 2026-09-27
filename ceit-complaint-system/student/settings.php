@@ -9,8 +9,8 @@ $stmt->execute([$userId]);
 $user = $stmt->fetch();
 
 $errors = [];
-$departments = ['BS Information Technology', 'BS Computer Science', 'BS Computer Engineering', 'BS Information Systems'];
-$yearLevels  = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+$departments = ['BS Agricultural and Biosystems Engineering', 'BS Architecture', 'BS Civil Engineering', 'BS Computer Engineering', 'BS Computer Science', 'BS Electrical Engineering', 'BS Electronics Engineering', 'BS Industrial Engineering', 'BS Industrial Technology', 'BS Information Systems', 'BS Information Technology' ];
+$yearLevels  = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Irregular (5th, 6th, etc.)' ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';

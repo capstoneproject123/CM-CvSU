@@ -6,11 +6,11 @@ require_role(['student']);
 $userId = $_SESSION['user_id'];
 
 $statusFilter = $_GET['status'] ?? '';
-$typeFilter   = $_GET['type'] ?? '';
-$dateFrom     = $_GET['date_from'] ?? '';
-$dateTo       = $_GET['date_to'] ?? '';
-$datePreset   = $_GET['date_preset'] ?? ''; // '', 'month', 'year', or 'custom' — purely for restoring the dropdown UI
-$search       = trim($_GET['q'] ?? '');
+$typeFilter = $_GET['type'] ?? '';
+$dateFrom = $_GET['date_from'] ?? '';
+$dateTo = $_GET['date_to'] ?? '';
+$datePreset = $_GET['date_preset'] ?? ''; // '', 'month', 'year', or 'custom' — purely for restoring the dropdown UI
+$search = trim($_GET['q'] ?? '');
 
 $sql = "SELECT * FROM cases WHERE user_id = ?";
 $params = [$userId];
@@ -46,27 +46,30 @@ $cases = $stmt->fetchAll();
 $matchedFields = [];
 if ($search !== '') {
     foreach ($cases as $c) {
-        if (stripos($c['case_code'], $search) !== false) $matchedFields['id'] = true;
-        if (stripos($c['title'], $search) !== false) $matchedFields['title'] = true;
+        if (stripos($c['case_code'], $search) !== false)
+            $matchedFields['id'] = true;
+        if (stripos($c['title'], $search) !== false)
+            $matchedFields['title'] = true;
     }
 }
 $matchedFields = array_keys($matchedFields);
 
 // Shared renderer for the badge-style columns (type, status).
 // $label lets a column show something other than the raw value (e.g. "Complaint" instead of "complaint").
-function badge_cell($value, callable $classFn, $label = null) {
+function badge_cell($value, callable $classFn, $label = null)
+{
     return '<span class="badge ' . $classFn($value) . '">' . ($label ?? e($value)) . '</span>';
 }
 
 // --- Column definitions: label + how to render each cell -----------------
 // This list also defines the DEFAULT column order.
 $columnDefs = [
-    'id'       => ['label' => 'ID', 'cell' => fn($c) => e($c['case_code'])],
-    'title'    => ['label' => 'Title', 'cell' => fn($c) => e($c['title'])],
+    'id' => ['label' => 'ID', 'cell' => fn($c) => e($c['case_code'])],
+    'title' => ['label' => 'Title', 'cell' => fn($c) => e($c['title'])],
     'category' => ['label' => 'Category', 'cell' => fn($c) => e($c['category'])],
-    'date'     => ['label' => 'Date', 'cell' => fn($c) => date('M j, Y', strtotime($c['created_at']))],
-    'type'     => ['label' => 'Type', 'cell' => fn($c) => badge_cell($c['type'], fn($v) => $v === 'complaint' ? 'badge-complaint' : 'badge-inquiry', ucfirst($c['type']))],
-    'status'   => ['label' => 'Status', 'cell' => fn($c) => badge_cell($c['status'], 'status_badge_class')],
+    'date' => ['label' => 'Date', 'cell' => fn($c) => date('M j, Y', strtotime($c['created_at']))],
+    'type' => ['label' => 'Type', 'cell' => fn($c) => badge_cell($c['type'], fn($v) => $v === 'complaint' ? 'badge-complaint' : 'badge-inquiry', ucfirst($c['type']))],
+    'status' => ['label' => 'Status', 'cell' => fn($c) => badge_cell($c['status'], 'status_badge_class')],
 ];
 $defaultOrder = array_keys($columnDefs);
 
@@ -152,7 +155,9 @@ require __DIR__ . '/../includes/sidebar.php';
                 <?php foreach ($orderedKeys as $key): ?>
                     <td><?= $columnDefs[$key]['cell']($c) ?></td>
                 <?php endforeach; ?>
-                <td><a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
+                <td style="white-space:nowrap;">
+                    <a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a>
+                </td>
             </tr>
         <?php endforeach; ?>
         </tbody>

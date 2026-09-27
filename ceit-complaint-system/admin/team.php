@@ -9,20 +9,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add_staff') {
-        $firstName  = trim($_POST['first_name'] ?? '');
-        $lastName   = trim($_POST['last_name'] ?? '');
+        $firstName = trim($_POST['first_name'] ?? '');
+        $lastName = trim($_POST['last_name'] ?? '');
         $employeeId = trim($_POST['employee_id'] ?? '');
-        $role       = in_array($_POST['role'] ?? '', ['admin', 'sysadmin', 'adviser'], true) ? $_POST['role'] : 'admin';
-        $tempPass   = $_POST['temp_password'] ?? '';
+        $role = in_array($_POST['role'] ?? '', ['admin', 'sysadmin', 'adviser'], true) ? $_POST['role'] : 'admin';
+        $tempPass = $_POST['temp_password'] ?? '';
 
-        if ($firstName === '' || $lastName === '') $errors[] = 'First and last name are required.';
-        if ($employeeId === '') $errors[] = 'Employee ID is required.';
-        if (strlen($tempPass) < 8) $errors[] = 'Temporary password must be at least 8 characters.';
+        if ($firstName === '' || $lastName === '')
+            $errors[] = 'First and last name are required.';
+        if ($employeeId === '')
+            $errors[] = 'Employee ID is required.';
+        if (strlen($tempPass) < 8)
+            $errors[] = 'Temporary password must be at least 8 characters.';
 
         if (!$errors) {
             $stmt = $pdo->prepare("SELECT user_id FROM users WHERE employee_id = ?");
             $stmt->execute([$employeeId]);
-            if ($stmt->fetch()) $errors[] = 'That Employee ID is already registered.';
+            if ($stmt->fetch())
+                $errors[] = 'That Employee ID is already registered.';
         }
 
         if (!$errors) {
@@ -39,6 +43,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($targetId !== (int) $_SESSION['user_id']) {
             $pdo->prepare("UPDATE users SET status = IF(status = 'active', 'disabled', 'active') WHERE user_id = ?")
                 ->execute([$targetId]);
+        }
+        header('Location: ' . BASE_URL . '/admin/team.php');
+        exit;
+    }
+
+    if ($action === 'delete_staff') {
+        $targetId = (int) ($_POST['user_id'] ?? 0);
+        if ($targetId !== (int) $_SESSION['user_id']) {
+            $pdo->prepare("DELETE FROM users WHERE user_id = ? AND role IN ('admin','sysadmin','adviser')")
+                ->execute([$targetId]);
+            flash_set('success', 'Account deleted.');
         }
         header('Location: ' . BASE_URL . '/admin/team.php');
         exit;
@@ -75,6 +90,12 @@ require __DIR__ . '/../includes/sidebar.php';
                         <input type="hidden" name="user_id" value="<?= $s['user_id'] ?>">
                         <button type="submit" name="action" value="toggle_status" class="link-btn" style="background:none;border:none;cursor:pointer;">
                             <?= $s['status'] === 'active' ? 'Disable' : 'Enable' ?>
+                        </button>
+                    </form>
+                    <form method="post" style="display:inline;" data-confirm="Permanently delete this account? This cannot be undone.">
+                        <input type="hidden" name="user_id" value="<?= $s['user_id'] ?>">
+                        <button type="submit" name="action" value="delete_staff" class="link-btn" style="background:none;border:none;cursor:pointer;color:#c0392b;margin-left:8px;">
+                            Delete
                         </button>
                     </form>
                     <?php else: ?>

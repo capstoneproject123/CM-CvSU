@@ -6,61 +6,72 @@ require __DIR__ . '/../includes/functions.php';
 // Adviser accounts are NOT self-registered here — they're created by an Admin from
 // the Team page (see admin/team.php), since advisers need to be vetted staff.
 
-$departments = ['BS Information Technology', 'BS Computer Science', 'BS Computer Engineering', 'BS Information Systems'];
-$yearLevels  = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+$departments = ['BS Agricultural and Biosystems Engineering', 'BS Architecture', 'BS Civil Engineering', 'BS Computer Engineering', 'BS Computer Science', 'BS Electrical Engineering', 'BS Electronics Engineering', 'BS Industrial Engineering', 'BS Industrial Technology', 'BS Information Systems', 'BS Information Technology'];
+$yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Irregular (5th, 6th, etc.)'];
 $cvsuDomains = ['cvsu.edu.ph']; // any subdomain (e.g. ceit.cvsu.edu.ph, cvsu.edu.ph) is accepted
 
 $errors = [];
 $firstName = $lastName = $email = $employeeId = $department = $yearLevel = '';
 $role = 'student';
 
-function is_cvsu_email(string $email, array $domains): bool {
+function is_cvsu_email(string $email, array $domains): bool
+{
     $at = strrchr($email, '@');
-    if ($at === false) return false;
+    if ($at === false)
+        return false;
     $host = strtolower(ltrim($at, '@'));
     foreach ($domains as $d) {
-        if ($host === $d || str_ends_with($host, '.' . $d)) return true;
+        if ($host === $d || str_ends_with($host, '.' . $d))
+            return true;
     }
     return false;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $firstName  = trim($_POST['first_name'] ?? '');
-    $lastName   = trim($_POST['last_name'] ?? '');
-    $password   = $_POST['password'] ?? '';
-    $confirm    = $_POST['confirm_password'] ?? '';
-    $role       = ($_POST['role'] ?? 'student') === 'admin' ? 'admin' : 'student';
+    $firstName = trim($_POST['first_name'] ?? '');
+    $lastName = trim($_POST['last_name'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm = $_POST['confirm_password'] ?? '';
+    $role = ($_POST['role'] ?? 'student') === 'admin' ? 'admin' : 'student';
 
-    if ($firstName === '' || $lastName === '') $errors[] = 'First and last name are required.';
-    if (strlen($password) < 8) $errors[] = 'Password must be at least 8 characters.';
-    if ($password !== $confirm) $errors[] = 'Passwords do not match.';
+    if ($firstName === '' || $lastName === '')
+        $errors[] = 'First and last name are required.';
+    if (strlen($password) < 8)
+        $errors[] = 'Password must be at least 8 characters.';
+    if ($password !== $confirm)
+        $errors[] = 'Passwords do not match.';
 
     if ($role === 'student') {
-        $email      = trim($_POST['email'] ?? '');
+        $email = trim($_POST['email'] ?? '');
         $department = $_POST['department'] ?? '';
-        $yearLevel  = $_POST['year_level'] ?? '';
+        $yearLevel = $_POST['year_level'] ?? '';
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'Please enter a valid email address.';
         } elseif (!is_cvsu_email($email, $cvsuDomains)) {
             $errors[] = 'Please use your official CvSU email address (e.g. yourname@cvsu.edu.ph).';
         }
-        if (!in_array($department, $departments, true)) $errors[] = 'Please select your college department.';
-        if (!in_array($yearLevel, $yearLevels, true)) $errors[] = 'Please select your year level.';
+        if (!in_array($department, $departments, true))
+            $errors[] = 'Please select your college department.';
+        if (!in_array($yearLevel, $yearLevels, true))
+            $errors[] = 'Please select your year level.';
 
         if (!$errors) {
             $stmt = $pdo->prepare("SELECT user_id FROM users WHERE email = ?");
             $stmt->execute([$email]);
-            if ($stmt->fetch()) $errors[] = 'An account with that CvSU email already exists.';
+            if ($stmt->fetch())
+                $errors[] = 'An account with that CvSU email already exists.';
         }
     } else {
         $employeeId = trim($_POST['employee_id'] ?? '');
-        if ($employeeId === '') $errors[] = 'Employee ID is required.';
+        if ($employeeId === '')
+            $errors[] = 'Employee ID is required.';
 
         if (!$errors) {
             $stmt = $pdo->prepare("SELECT user_id FROM users WHERE employee_id = ?");
             $stmt->execute([$employeeId]);
-            if ($stmt->fetch()) $errors[] = 'An account with that Employee ID already exists.';
+            if ($stmt->fetch())
+                $errors[] = 'An account with that Employee ID already exists.';
         }
     }
 

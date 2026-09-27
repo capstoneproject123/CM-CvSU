@@ -4,22 +4,26 @@
  * Included by every page after config/db.php.
  */
 
-function is_logged_in(): bool {
+function is_logged_in(): bool
+{
     return isset($_SESSION['user_id']);
 }
 
-function current_role(): ?string {
+function current_role(): ?string
+{
     return $_SESSION['role'] ?? null;
 }
 
-function require_login(): void {
+function require_login(): void
+{
     if (!is_logged_in()) {
         header('Location: ' . BASE_URL . '/auth/login.php');
         exit;
     }
 }
 
-function require_role(array $roles): void {
+function require_role(array $roles): void
+{
     require_login();
     if (!in_array(current_role(), $roles, true)) {
         header('Location: ' . BASE_URL . '/auth/login.php');
@@ -27,11 +31,18 @@ function require_role(array $roles): void {
     }
 }
 
-function is_adviser(): bool { return current_role() === 'adviser'; }
-function is_sysadmin(): bool { return current_role() === 'sysadmin'; }
+function is_adviser(): bool
+{
+    return current_role() === 'adviser';
+}
+function is_sysadmin(): bool
+{
+    return current_role() === 'sysadmin';
+}
 
 /** Whether the current logged-in staff member (admin/adviser/sysadmin) can open a given case's chat */
-function can_access_case(array $case, int $userId, string $role): bool {
+function can_access_case(array $case, int $userId, string $role): bool
+{
     if ($role === 'student') {
         return (int) $case['user_id'] === $userId;
     }
@@ -43,24 +54,29 @@ function can_access_case(array $case, int $userId, string $role): bool {
 }
 
 /** Returns active adviser accounts, for the "suggest an adviser" / "assign to" dropdowns */
-function list_advisers(PDO $pdo): array {
+function list_advisers(PDO $pdo): array
+{
     return $pdo->query("SELECT user_id, first_name, last_name FROM users WHERE role = 'adviser' AND status = 'active' ORDER BY first_name")->fetchAll();
 }
 
 /** The identifier a user actually logs in with: CvSU email for students, Employee ID for staff */
-function login_identifier(array $user): string {
+function login_identifier(array $user): string
+{
     return $user['email'] ?: ($user['employee_id'] ?? '');
 }
 
-function e(?string $str): string {
+function e(?string $str): string
+{
     return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-function flash_set(string $type, string $message): void {
+function flash_set(string $type, string $message): void
+{
     $_SESSION['flash'] = ['type' => $type, 'message' => $message];
 }
 
-function flash_get(): ?array {
+function flash_get(): ?array
+{
     if (!empty($_SESSION['flash'])) {
         $f = $_SESSION['flash'];
         unset($_SESSION['flash']);
@@ -70,45 +86,59 @@ function flash_get(): ?array {
 }
 
 /** Generates the next case code, e.g. CMP-0001 / INQ-0001 */
-function generate_case_code(PDO $pdo, string $type): string {
+function generate_case_code(PDO $pdo, string $type): string
+{
     $prefix = $type === 'complaint' ? 'CMP' : 'INQ';
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM cases WHERE type = ?");
+    // Base the next number on the highest one ever issued, not a row count.
+    // Counting rows breaks permanently the moment any case of this type is
+    // ever deleted: the count falls behind and starts reissuing a code that's
+    // already taken, which fails every subsequent insert if case_code is UNIQUE.
+    $stmt = $pdo->prepare("SELECT case_code FROM cases WHERE type = ? ORDER BY case_id DESC LIMIT 1");
     $stmt->execute([$type]);
-    $count = (int) $stmt->fetchColumn() + 1;
-    return sprintf('%s-%04d', $prefix, $count);
+    $last = $stmt->fetchColumn();
+    $next = $last ? ((int) substr($last, strlen($prefix) + 1)) + 1 : 1;
+    return sprintf('%s-%04d', $prefix, $next);
 }
 
 /** Maps a status string to a CSS badge class */
-function status_badge_class(string $status): string {
+function status_badge_class(string $status): string
+{
     return match ($status) {
-        'Submitted'     => 'badge-submitted',
-        'Under Review'  => 'badge-review',
-        'In Progress'   => 'badge-progress',
-        'Resolved'      => 'badge-resolved',
-        default         => 'badge-submitted',
+        'Submitted' => 'badge-submitted',
+        'Under Review' => 'badge-review',
+        'In Progress' => 'badge-progress',
+        'Resolved' => 'badge-resolved',
+        default => 'badge-submitted',
     };
 }
 
-function priority_badge_class(string $priority): string {
+function priority_badge_class(string $priority): string
+{
     return match ($priority) {
-        'High'   => 'badge-high',
+        'High' => 'badge-high',
         'Medium' => 'badge-medium',
-        'Low'    => 'badge-low',
-        default  => 'badge-medium',
+        'Low' => 'badge-low',
+        default => 'badge-medium',
     };
 }
 
-function time_ago(string $datetime): string {
+function time_ago(string $datetime): string
+{
     $diff = time() - strtotime($datetime);
-    if ($diff < 60) return 'just now';
-    if ($diff < 3600) return floor($diff / 60) . 'm ago';
-    if ($diff < 86400) return floor($diff / 3600) . 'h ago';
-    if ($diff < 604800) return floor($diff / 86400) . 'd ago';
+    if ($diff < 60)
+        return 'just now';
+    if ($diff < 3600)
+        return floor($diff / 60) . 'm ago';
+    if ($diff < 86400)
+        return floor($diff / 3600) . 'h ago';
+    if ($diff < 604800)
+        return floor($diff / 86400) . 'd ago';
     return date('M j, Y', strtotime($datetime));
 }
 
 /** Records a status change + notifies the case owner */
-function update_case_status(PDO $pdo, int $caseId, string $newStatus, ?int $changedBy, string $remarks = ''): void {
+function update_case_status(PDO $pdo, int $caseId, string $newStatus, ?int $changedBy, string $remarks = ''): void
+{
     $pdo->prepare("UPDATE cases SET status = ? WHERE case_id = ?")->execute([$newStatus, $caseId]);
     $pdo->prepare("INSERT INTO status_history (case_id, status, changed_by, remarks) VALUES (?, ?, ?, ?)")
         ->execute([$caseId, $newStatus, $changedBy, $remarks]);
@@ -124,7 +154,8 @@ function update_case_status(PDO $pdo, int $caseId, string $newStatus, ?int $chan
 }
 
 /** Notifies every admin/sysadmin (and the suggested adviser, if any) that a new case was submitted */
-function notify_admins_new_case(PDO $pdo, int $caseId, string $caseCode, string $title, string $type, ?int $suggestedAdviserId = null): void {
+function notify_admins_new_case(PDO $pdo, int $caseId, string $caseCode, string $title, string $type, ?int $suggestedAdviserId = null): void
+{
     $msg = 'New ' . $type . ' submitted: ' . $caseCode . ' — ' . $title;
     $admins = $pdo->query("SELECT user_id FROM users WHERE role IN ('admin','sysadmin') AND status = 'active'")->fetchAll();
     $stmt = $pdo->prepare("INSERT INTO notifications (user_id, case_id, message) VALUES (?, ?, ?)");
@@ -137,11 +168,13 @@ function notify_admins_new_case(PDO $pdo, int $caseId, string $caseCode, string 
 }
 
 /** Notifies whichever case participants did NOT send this message */
-function notify_new_message(PDO $pdo, int $caseId, int $senderId): void {
+function notify_new_message(PDO $pdo, int $caseId, int $senderId): void
+{
     $stmt = $pdo->prepare("SELECT case_code, user_id, assigned_to FROM cases WHERE case_id = ?");
     $stmt->execute([$caseId]);
     $case = $stmt->fetch();
-    if (!$case) return;
+    if (!$case)
+        return;
 
     $stmt = $pdo->prepare("SELECT first_name, last_name FROM users WHERE user_id = ?");
     $stmt->execute([$senderId]);
@@ -164,7 +197,9 @@ function notify_new_message(PDO $pdo, int $caseId, int $senderId): void {
     // If nobody is assigned yet and a staff member didn't send this, fall back to notifying all admins
     if (!$case['assigned_to'] && (int) $case['user_id'] === $senderId) {
         $admins = $pdo->query("SELECT user_id FROM users WHERE role IN ('admin','sysadmin') AND status = 'active'")->fetchAll();
-        foreach ($admins as $a) { $ins->execute([$a['user_id'], $caseId, $msg]); }
+        foreach ($admins as $a) {
+            $ins->execute([$a['user_id'], $caseId, $msg]);
+        }
     }
 }
 
@@ -173,7 +208,8 @@ function notify_new_message(PDO $pdo, int $caseId, int $senderId): void {
  * Returns null on success, or an error message string on failure.
  * Does nothing (returns null) if no file was actually chosen.
  */
-function handle_avatar_upload(PDO $pdo, int $userId): ?string {
+function handle_avatar_upload(PDO $pdo, int $userId): ?string
+{
     if (empty($_FILES['avatar']['name'])) {
         return null;
     }
@@ -199,7 +235,9 @@ function handle_avatar_upload(PDO $pdo, int $userId): ?string {
     $old = $stmt->fetchColumn();
     if ($old) {
         $oldFull = __DIR__ . '/../' . $old;
-        if (is_file($oldFull)) { @unlink($oldFull); }
+        if (is_file($oldFull)) {
+            @unlink($oldFull);
+        }
     }
 
     if (!move_uploaded_file($file['tmp_name'], $uploadDir . $safeName)) {
@@ -212,14 +250,16 @@ function handle_avatar_upload(PDO $pdo, int $userId): ?string {
     return null;
 }
 
-function render_flash(): void {
+function render_flash(): void
+{
     $f = flash_get();
     if ($f) {
         echo '<div class="flash flash-' . e($f['type']) . '">' . e($f['message']) . '</div>';
     }
 }
 
-function unread_notification_count(PDO $pdo, int $userId): int {
+function unread_notification_count(PDO $pdo, int $userId): int
+{
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0");
     $stmt->execute([$userId]);
     return (int) $stmt->fetchColumn();

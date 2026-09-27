@@ -18,18 +18,18 @@ if (is_logged_in()) {
         $dashboardHref = BASE_URL . '/student/dashboard.php';
         $navItems = [
             'dashboard' => ['label' => 'Dashboard', 'href' => BASE_URL . '/student/dashboard.php', 'icon' => '🏠'],
-            'submit'    => ['label' => 'Submit',    'href' => BASE_URL . '/student/submit.php',    'icon' => '📝'],
-            'track'     => ['label' => 'Track',     'href' => BASE_URL . '/student/track.php',     'icon' => '📍'],
-            'settings'  => ['label' => 'Settings',  'href' => BASE_URL . '/student/settings.php',  'icon' => '⚙️'],
+            'submit' => ['label' => 'Submit', 'href' => BASE_URL . '/student/submit.php', 'icon' => '📝'],
+            'track' => ['label' => 'Track', 'href' => BASE_URL . '/student/track.php', 'icon' => '📍'],
+            'settings' => ['label' => 'Settings', 'href' => BASE_URL . '/student/settings.php', 'icon' => '⚙️'],
         ];
     } else {
         $dashboardHref = BASE_URL . '/admin/dashboard.php';
         $navItems = [
             'dashboard' => ['label' => 'Dashboard', 'href' => BASE_URL . '/admin/dashboard.php', 'icon' => '🏠'],
-            'case'      => ['label' => 'Case',      'href' => BASE_URL . '/admin/cases.php',      'icon' => '🗂️'],
-            'report'    => ['label' => 'Report',    'href' => BASE_URL . '/admin/report.php',     'icon' => '📊'],
-            'team'      => ['label' => 'Team',      'href' => BASE_URL . '/admin/team.php',       'icon' => '👥'],
-            'settings'  => ['label' => 'Settings',  'href' => BASE_URL . '/admin/settings.php',   'icon' => '⚙️'],
+            'case' => ['label' => 'Case', 'href' => BASE_URL . '/admin/cases.php', 'icon' => '🗂️'],
+            'report' => ['label' => 'Report', 'href' => BASE_URL . '/admin/report.php', 'icon' => '📊'],
+            'team' => ['label' => 'Team', 'href' => BASE_URL . '/admin/team.php', 'icon' => '👥'],
+            'settings' => ['label' => 'Settings', 'href' => BASE_URL . '/admin/settings.php', 'icon' => '⚙️'],
         ];
         if ($role === 'adviser') {
             // Advisers only handle cases assigned to them — no staff management, no full analytics.
@@ -76,6 +76,9 @@ if (is_logged_in()) {
     </div>
     <?php if (is_logged_in()): ?>
     <div class="topbar-actions">
+        <div class="topbar-datetime" id="topbarDatetime">
+            <span class="dt-time"></span>
+        </div>
         <div class="dropdown-wrap" id="notif-wrap">
             <button type="button" class="bell" id="notif-btn" title="Notifications" aria-haspopup="true" aria-expanded="false">
                 🔔
@@ -105,4 +108,20 @@ if (is_logged_in()) {
     </div>
     <?php endif; ?>
 </header>
+<script>
+(function () {
+    var timeEl = document.querySelector('#topbarDatetime .dt-time');
+    if (!timeEl) return;
+
+    var timeFmt = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+    function tick() {
+        var now = new Date();
+        timeEl.textContent = timeFmt.format(now);
+    }
+
+    tick();
+    setInterval(tick, 1000);
+})();
+</script>
 <div class="app-shell">
