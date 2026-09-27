@@ -33,7 +33,7 @@ require __DIR__ . '/../includes/sidebar.php';
         <div class="stat-icon">⏳</div>
     </div>
     <div class="stat-card">
-        <div><div class="stat-label">Submitted</div><div class="stat-value"><?= $total ?></div><div class="stat-sub">All time</div></div>
+        <div><div class="stat-label">Total Complaints</div><div class="stat-value"><?= $total ?></div><div class="stat-sub">All time</div></div>
         <div class="stat-icon">📁</div>
     </div>
     <div class="stat-card">
@@ -64,7 +64,17 @@ require __DIR__ . '/../includes/sidebar.php';
                 <td><?= date('M j, Y', strtotime($c['created_at'])) ?></td>
                 <td><span class="badge <?= $c['type'] === 'complaint' ? 'badge-complaint' : 'badge-inquiry' ?>"><?= ucfirst($c['type']) ?></span></td>
                 <td><span class="badge <?= status_badge_class($c['status']) ?>"><?= e($c['status']) ?></span></td>
-                <td><a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
+                <td style="white-space:nowrap;">
+                    <a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a>
+                    <?php if ($c['status'] === 'Submitted'): ?>
+                        &nbsp;·&nbsp;
+                        <a class="link-btn" href="<?= BASE_URL ?>/student/edit_case.php?id=<?= $c['case_id'] ?>">Edit</a>
+                        &nbsp;·&nbsp;
+                        <form method="post" action="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>" style="display:inline;" data-confirm="Delete this submission? This cannot be undone.">
+                            <button type="submit" name="action" value="delete_case" class="link-btn" style="background:none;border:none;cursor:pointer;color:#c0392b;">Delete</button>
+                        </form>
+                    <?php endif; ?>
+                </td>
             </tr>
         <?php endforeach; ?>
         </tbody>

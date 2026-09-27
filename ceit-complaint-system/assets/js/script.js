@@ -18,17 +18,73 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // File input: show chosen filename in the drop zone
+    // File input: accumulate files across multiple picks instead of the browser's
+    // default of replacing the whole selection every time the picker is opened,
+    // and show each chosen file with its own remove (×) button.
     var fileInput = document.querySelector('#file-input');
     if (fileInput) {
-        fileInput.addEventListener('change', function () {
-            var label = document.querySelector('#file-drop-label');
-            if (label) {
-                label.textContent = fileInput.files.length
-                    ? fileInput.files.length + ' file(s) selected: ' + Array.from(fileInput.files).map(f => f.name).join(', ')
-                    : 'Click to Browse Files or drag and drop (JPEG, PNG, or PDF up to 10MB)';
+        var dropLabel = document.querySelector('#file-drop-label');
+        var defaultLabelHtml = dropLabel ? dropLabel.innerHTML : '';
+        var maxFiles = parseInt(fileInput.getAttribute('data-max-files'), 10) || 5;
+        var chosenFiles = []; // File objects accumulated across every 'change' event
+
+        var listEl = document.getElementById('file-chosen-list');
+        if (!listEl && dropLabel) {
+            listEl = document.createElement('div');
+            listEl.id = 'file-chosen-list';
+            listEl.style.marginTop = '8px';
+            dropLabel.insertAdjacentElement('afterend', listEl);
+        }
+
+        // Rebuilds the real <input>'s file list from `chosenFiles`, so the form
+        // still submits every accumulated file even though the browser only
+        // ever hands us one fresh selection at a time via 'change'.
+        function syncInputFiles() {
+            var dt = new DataTransfer();
+            chosenFiles.forEach(function (f) { dt.items.add(f); });
+            fileInput.files = dt.files;
+        }
+
+        function renderFileList() {
+            if (!listEl) return;
+            if (!chosenFiles.length) {
+                listEl.innerHTML = '';
+                if (dropLabel) dropLabel.innerHTML = defaultLabelHtml;
+                return;
             }
+            if (dropLabel) {
+                dropLabel.innerHTML = chosenFiles.length + ' of ' + maxFiles + ' file(s) selected — click to add more';
+            }
+            listEl.innerHTML = chosenFiles.map(function (f, i) {
+                return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--gray-100,#f2f2f2);border-radius:6px;margin-bottom:5px;font-size:13px;">'
+                    + '<span>📎 ' + f.name.replace(/</g, '&lt;') + '</span>'
+                    + '<button type="button" class="file-remove-btn" data-index="' + i + '" aria-label="Remove file" style="background:none;border:none;color:#c0392b;cursor:pointer;font-size:16px;line-height:1;">&times;</button>'
+                    + '</div>';
+            }).join('');
+        }
+
+        fileInput.addEventListener('change', function () {
+            Array.from(fileInput.files || []).forEach(function (f) {
+                var isDuplicate = chosenFiles.some(function (existing) {
+                    return existing.name === f.name && existing.size === f.size;
+                });
+                if (!isDuplicate && chosenFiles.length < maxFiles) {
+                    chosenFiles.push(f);
+                }
+            });
+            syncInputFiles();
+            renderFileList();
         });
+
+        if (listEl) {
+            listEl.addEventListener('click', function (e) {
+                var btn = e.target.closest('.file-remove-btn');
+                if (!btn) return;
+                chosenFiles.splice(parseInt(btn.getAttribute('data-index'), 10), 1);
+                syncInputFiles();
+                renderFileList();
+            });
+        }
     }
 
     // Auto-scroll chat thread to the latest message

@@ -152,7 +152,17 @@ require __DIR__ . '/../includes/sidebar.php';
                 <?php foreach ($orderedKeys as $key): ?>
                     <td><?= $columnDefs[$key]['cell']($c) ?></td>
                 <?php endforeach; ?>
-                <td><a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a></td>
+                <td style="white-space:nowrap;">
+                    <a class="link-btn" href="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>">View Detail</a>
+                    <?php if ($c['status'] === 'Submitted'): ?>
+                        &nbsp;·&nbsp;
+                        <a class="link-btn" href="<?= BASE_URL ?>/student/edit_case.php?id=<?= $c['case_id'] ?>">Edit</a>
+                        &nbsp;·&nbsp;
+                        <form method="post" action="<?= BASE_URL ?>/student/case.php?id=<?= $c['case_id'] ?>" style="display:inline;" data-confirm="Delete this submission? This cannot be undone.">
+                            <button type="submit" name="action" value="delete_case" class="link-btn" style="background:none;border:none;cursor:pointer;color:#c0392b;">Delete</button>
+                        </form>
+                    <?php endif; ?>
+                </td>
             </tr>
         <?php endforeach; ?>
         </tbody>

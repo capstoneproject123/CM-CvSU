@@ -6,7 +6,7 @@ require __DIR__ . '/../includes/functions.php';
 // Adviser accounts are NOT self-registered here — they're created by an Admin from
 // the Team page (see admin/team.php), since advisers need to be vetted staff.
 
-$departments = ['BS Agricultural Engineering', 'BS Architecture', 'BS Civil Engineering', 'BS Computer Engineering', 'BS Computer Science', 'BS Electrical Engineering', 'BS Electronics Engineering', 'BS Industrial Engineering', 'BS Industrial Technology', 'BS Information Systems', 'BS Information Technology'];
+$departments = ['BS Agricultural and Biosystems Engineering', 'BS Architecture', 'BS Civil Engineering', 'BS Computer Engineering', 'BS Computer Science', 'BS Electrical Engineering', 'BS Electronics Engineering', 'BS Industrial Engineering', 'BS Industrial Technology', 'BS Information Systems', 'BS Information Technology'];
 $yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Irregular (5th, 6th, etc.)'];
 $cvsuDomains = ['cvsu.edu.ph']; // any subdomain (e.g. ceit.cvsu.edu.ph, cvsu.edu.ph) is accepted
 

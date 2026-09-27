@@ -10,34 +10,60 @@ $categories = ['Academic Concerns', 'Technical Issues', 'Administrative', 'Facil
 $advisers = list_advisers($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $type        = ($_POST['case_type'] ?? 'complaint') === 'inquiry' ? 'inquiry' : 'complaint';
-    $title       = trim($_POST['title'] ?? '');
-    $category    = $_POST['category'] ?? '';
-    $priority    = in_array($_POST['priority'] ?? '', ['Low', 'Medium', 'High']) ? $_POST['priority'] : 'Medium';
+    $type = ($_POST['case_type'] ?? 'complaint') === 'inquiry' ? 'inquiry' : 'complaint';
+    $title = trim($_POST['title'] ?? '');
+    $category = $_POST['category'] ?? '';
+    $priority = in_array($_POST['priority'] ?? '', ['Low', 'Medium', 'High']) ? $_POST['priority'] : 'Medium';
     $description = trim($_POST['description'] ?? '');
-    $anonymous   = isset($_POST['anonymous']) ? 1 : 0;
-    $certify     = isset($_POST['certify']);
+    $anonymous = isset($_POST['anonymous']) ? 1 : 0;
+    $certify = isset($_POST['certify']);
     $suggestedAdviserId = !empty($_POST['suggested_adviser']) ? (int) $_POST['suggested_adviser'] : null;
 
-    if ($title === '') $errors[] = 'Title is required.';
-    if (!in_array($category, $categories, true)) $errors[] = 'Please select a category.';
-    if ($description === '') $errors[] = 'Please provide a description.';
-    if (!$certify) $errors[] = 'You must certify that the information provided is true and accurate.';
+    if ($title === '')
+        $errors[] = 'Title is required.';
+    if (!in_array($category, $categories, true))
+        $errors[] = 'Please select a category.';
+    if ($description === '')
+        $errors[] = 'Please provide a description.';
+    if (!$certify)
+        $errors[] = 'You must certify that the information provided is true and accurate.';
     if ($suggestedAdviserId && !in_array($suggestedAdviserId, array_column($advisers, 'user_id'), true)) {
         $suggestedAdviserId = null; // ignore tampered/invalid values rather than error out
     }
 
-    // Optional file upload
-    $uploadedFile = null;
-    if (!empty($_FILES['attachment']['name'])) {
+    // Optional file upload(s) — the input now accepts multiple files
+    $uploadedFiles = [];
+    $maxAttachments = 5;
+    if (!empty($_FILES['attachment']['name'][0])) {
         $allowed = ['jpg', 'jpeg', 'png', 'pdf'];
-        $ext = strtolower(pathinfo($_FILES['attachment']['name'], PATHINFO_EXTENSION));
-        if (!in_array($ext, $allowed, true)) {
-            $errors[] = 'Only JPEG, PNG, or PDF files are allowed.';
-        } elseif ($_FILES['attachment']['size'] > 10 * 1024 * 1024) {
-            $errors[] = 'File must be under 10MB.';
+        $fileCount = count($_FILES['attachment']['name']);
+
+        if ($fileCount > $maxAttachments) {
+            $errors[] = "You can attach up to {$maxAttachments} files.";
         } else {
-            $uploadedFile = $_FILES['attachment'];
+            for ($i = 0; $i < $fileCount; $i++) {
+                if ($_FILES['attachment']['error'][$i] === UPLOAD_ERR_NO_FILE) {
+                    continue;
+                }
+                $name = $_FILES['attachment']['name'][$i];
+                if ($_FILES['attachment']['error'][$i] !== UPLOAD_ERR_OK) {
+                    $errors[] = "There was a problem uploading \"{$name}\". Please try again.";
+                    continue;
+                }
+                $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+                if (!in_array($ext, $allowed, true)) {
+                    $errors[] = "\"{$name}\" isn't a JPEG, PNG, or PDF file.";
+                    continue;
+                }
+                if ($_FILES['attachment']['size'][$i] > 10 * 1024 * 1024) {
+                    $errors[] = "\"{$name}\" is over 10MB.";
+                    continue;
+                }
+                $uploadedFiles[] = [
+                    'name' => $name,
+                    'tmp_name' => $_FILES['attachment']['tmp_name'][$i],
+                ];
+            }
         }
     }
 
@@ -53,12 +79,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare("INSERT INTO status_history (case_id, status, changed_by, remarks) VALUES (?, 'Submitted', ?, 'Case submitted by student')")
                 ->execute([$caseId, $userId]);
 
-            if ($uploadedFile) {
+            if ($uploadedFiles) {
                 $uploadDir = __DIR__ . '/../uploads/';
-                $safeName = $caseCode . '_' . preg_replace('/[^A-Za-z0-9._-]/', '_', $uploadedFile['name']);
-                move_uploaded_file($uploadedFile['tmp_name'], $uploadDir . $safeName);
-                $pdo->prepare("INSERT INTO attachments (case_id, file_name, file_path) VALUES (?, ?, ?)")
-                    ->execute([$caseId, $uploadedFile['name'], 'uploads/' . $safeName]);
+                $attachStmt = $pdo->prepare("INSERT INTO attachments (case_id, file_name, file_path) VALUES (?, ?, ?)");
+                foreach ($uploadedFiles as $index => $file) {
+                    // Include the loop index so two files with the same original name
+                    // (e.g. two "IMG_0001.jpg" from a phone) never collide on disk.
+                    $safeName = $caseCode . '_' . ($index + 1) . '_' . preg_replace('/[^A-Za-z0-9._-]/', '_', $file['name']);
+                    move_uploaded_file($file['tmp_name'], $uploadDir . $safeName);
+                    $attachStmt->execute([$caseId, $file['name'], 'uploads/' . $safeName]);
+                }
             }
 
             $pdo->commit();
@@ -87,17 +117,17 @@ require __DIR__ . '/../includes/sidebar.php';
 
 <div class="panel">
     <div class="tab-group" data-tab-group>
-        <button type="button" class="tab-btn active" data-tab="complaint">Complaint</button>
-        <button type="button" class="tab-btn" data-tab="inquiry">Inquiry</button>
+        <button type="button" class="tab-btn<?= ($type ?? 'complaint') === 'complaint' ? ' active' : '' ?>" data-tab="complaint">Complaint</button>
+        <button type="button" class="tab-btn<?= ($type ?? 'complaint') === 'inquiry' ? ' active' : '' ?>" data-tab="inquiry">Inquiry</button>
     </div>
 
     <form method="post" enctype="multipart/form-data">
-        <input type="hidden" name="case_type" value="complaint">
+        <input type="hidden" name="case_type" id="case-type-field" value="<?= e($type ?? 'complaint') ?>">
 
         <h3 style="font-size:14px;margin-bottom:14px;">Provide Information</h3>
 
         <div class="form-group">
-            <label><span data-tab-panel="complaint" style="display:inline">Complaint Title</span><span data-tab-panel="inquiry" style="display:none">Inquiry Title</span> <span class="req">*</span></label>
+            <label><span data-tab-panel="complaint" style="display:<?= ($type ?? 'complaint') === 'complaint' ? 'inline' : 'none' ?>">Complaint Title</span><span data-tab-panel="inquiry" style="display:<?= ($type ?? 'complaint') === 'inquiry' ? 'inline' : 'none' ?>">Inquiry Title</span> <span class="req">*</span></label>
             <input type="text" name="title" value="<?= e($_POST['title'] ?? '') ?>" required placeholder="Brief summary of your concern">
         </div>
 
@@ -140,15 +170,15 @@ require __DIR__ . '/../includes/sidebar.php';
         <div class="form-group">
             <label>Supporting Evidence (optional)</label>
             <label for="file-input" class="file-drop" id="file-drop-label">
-                Click to Browse Files or drag and drop<br><span class="text-muted">JPEG, PNG, or PDF up to 10MB</span>
+                Click to Browse Files or drag and drop<br><span class="text-muted">JPEG, PNG, or PDF — up to 5 files, 10MB each</span>
             </label>
-            <input type="file" name="attachment" id="file-input" style="display:none" accept=".jpg,.jpeg,.png,.pdf">
+            <input type="file" name="attachment[]" id="file-input" style="display:none" accept=".jpg,.jpeg,.png,.pdf" multiple data-max-files="5">
         </div>
 
         <div class="form-group" style="display:flex;align-items:center;justify-content:space-between;">
             <label style="margin:0;">Submit Anonymously</label>
             <label class="switch">
-                <input type="checkbox" name="anonymous">
+                <input type="checkbox" name="anonymous" <?= isset($_POST['anonymous']) ? 'checked' : '' ?>>
                 <span class="slider"></span>
             </label>
         </div>
@@ -161,5 +191,27 @@ require __DIR__ . '/../includes/sidebar.php';
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>
+
+<script>
+(function () {
+    var group = document.querySelector('[data-tab-group]');
+    var typeField = document.getElementById('case-type-field');
+    if (!group || !typeField) return;
+
+    function setTab(tab) {
+        typeField.value = tab;
+        group.querySelectorAll('.tab-btn').forEach(function (btn) {
+            btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        document.querySelectorAll('[data-tab-panel]').forEach(function (el) {
+            el.style.display = (el.dataset.tabPanel === tab) ? 'inline' : 'none';
+        });
+    }
+
+    group.querySelectorAll('.tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { setTab(btn.dataset.tab); });
+    });
+})();
+</script>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>
